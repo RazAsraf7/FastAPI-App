@@ -31,7 +31,18 @@
         <input type="password" name="Password" placeholder="Password" required>
         <input type="email" name="Email" placeholder="Email" required>
         <input type="text" name="Address" placeholder="Address" required>
-        <input type="text" name="City" placeholder="City" required>
+
+        <!-- City Dropdown with Default Option and "Other" Option -->
+        <label for="City">City:</label>
+        <select name="City" id="City" required>
+            <option value="" selected disabled>Choose...</option>
+            {% for city in cities|sort(attribute='name') %}
+                <option value="{{ city.name }}">{{ city.name }}</option>
+            {% endfor %}
+            <option value="Other">Other</option>
+        </select>
+
+        <!-- Gender Dropdown -->
         <label for="Gender">Gender:</label>
         <select name="Gender" id="Gender" required>
             <option value="Male">Male</option>
@@ -39,6 +50,7 @@
             <option value="Other">Other</option>
             <option value="Do not specify">Do not specify</option>
         </select>
+
         <input type="text" name="Phone_Number" placeholder="Phone Number" required>
         <button type="submit">Register</button>
     </form>

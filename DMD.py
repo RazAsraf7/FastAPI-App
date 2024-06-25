@@ -37,8 +37,13 @@ async def index(request: Request):
 
 @app.get('/register', response_class=HTMLResponse)
 async def register_form(request: Request):
-    context = {'request': request}
-    return templates.TemplateResponse('register.html', context)
+    try:
+        # Fetch cities from MongoDB
+        cities = list(cities_collection.find({}, {"_id": 0, "name": 1}))
+        context = {'request': request, 'cities': cities}
+        return templates.TemplateResponse('register.html', context)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching cities: {e}")
 
 @app.post('/register', response_class=HTMLResponse)
 async def register(
