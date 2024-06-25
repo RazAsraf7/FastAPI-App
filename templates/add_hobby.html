@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Hobby</title>
+</head>
+<body>
+    <h1>Add Hobby for a User</h1>
+    <form action="/{{ user_id }}/add_hobby" method="post">
+        <label for="hobby">Hobby:</label>
+        <input type="text" id="hobby" name="hobby" required><br>
+
+        <button type="submit">Add Hobby</button>
+    </form>
+</body>
+</html>
