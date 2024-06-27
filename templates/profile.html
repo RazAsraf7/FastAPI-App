@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{user_name}} Profile{% endblock %}
+{% block title %}{{user_name}}'s Profile{% endblock %}
 
 {% block content %}
 <!DOCTYPE html>
@@ -74,13 +74,13 @@
             <div id="userInfoContainer">
                 <p><strong>Username:</strong> {{ user_name }}</p>
             </div>
-            <a href="/{{ user_name }}/add_hobby" class="button">Add Hobby</a>
-            <a href="/{{ user_name }}/remove_hobbies" class="button">Remove Hobbies</a>
         </section>
         <section id="hobbies">
             <h2>Hobbies</h2>
             <ul id="hobbiesList"></ul>
         </section>
+        <a href="/{{ user_name }}/add_hobby" class="button">Add Hobby</a>
+        <a href="/{{ user_name }}/remove_hobbies" class="button">Remove Hobbies</a>
         <button class="logout-button" onclick="logout()">Logout</button>
     </main>
     <footer>
