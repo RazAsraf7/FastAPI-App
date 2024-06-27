@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        main {
+            padding: 20px;
+        }
+
+        section {
+            margin-bottom: 20px;
+        }
+
+        section h2 {
+            margin-top: 0;
+        }
+
+        #hobbiesList li {
+            list-style-type: none;
+            margin-bottom: 10px;
+        }
+
+        footer {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .button {
+            display: block;
+            margin: 0 auto;
+            padding: 10px 20px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>User Profile</h1>
+    </header>
+    <main>
+        <section id="user-info">
+            <h2>User Information</h2>
+            <div id="userInfoContainer">
+                <p><strong>Username:</strong> <span id="user_name"></span></p>
+            </div>
+            <a href="/{{ user_name }}/add_hobby" class="button">Add Hobby</a>
+            <a href="/{{ user_name }}/remove_hobbies" class="button">Remove Hobbies</a>
+        </section>
+        <section id="hobbies">
+            <h2>Hobbies</h2>
+            <ul id="hobbiesList"></ul>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 DoMyDuda</p>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const username = '{{ user_name }}';
+            const hobbiesList = document.getElementById('hobbiesList');
+
+            try {
+                const response = await fetch(`/api/hobbies/${username}`);
+                const hobbies = await response.json(); 
+
+                if (response.ok) {
+                    hobbies.forEach(hobby => {
+                        const hobbyName = hobby.hobby;
+                        const listItem = document.createElement('li');
+                        listItem.textContent = hobbyName;
+                        hobbiesList.appendChild(listItem);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching hobbies:', error);
+            }
+        });
+    </script>
+</body>
+</html>

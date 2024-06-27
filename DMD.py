@@ -1,8 +1,9 @@
-from fastapi import FastAPI, HTTPException, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import FastAPI, HTTPException, Request, Form, Cookie, Response  # Import Response here
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from pymongo import MongoClient
+from pymongo import MongoClient, ReturnDocument
 from bson import ObjectId
+import json
 import uvicorn
 import re
 
@@ -30,9 +31,13 @@ app = FastAPI()
 # Templates for FastAPI
 templates = Jinja2Templates(directory="templates")
 
-@app.get('/index/', response_class=HTMLResponse)
-async def index(request: Request):
-    context = {'request': request}
+# Dummy authentication cookie (replace with your actual authentication method)
+def is_authenticated(request: Request) -> bool:
+    return "username" in request.cookies
+
+@app.get('/', response_class=HTMLResponse)
+async def index(request: Request, username: str = Cookie(default=None)):
+    context = {'request': request, 'username': username}
     return templates.TemplateResponse('index.html', context)
 
 @app.get('/register', response_class=HTMLResponse)
@@ -45,7 +50,7 @@ async def register_form(request: Request):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching cities: {e}")
 
-@app.post('/register', response_class=HTMLResponse)
+@app.post('/register')
 async def register(
     request: Request,
     First_Name: str = Form(...), Last_Name: str = Form(...), User_Name: str = Form(...), Password: str = Form(...),
@@ -66,12 +71,12 @@ async def register(
 
         # Check if user with same username already exists
         existing_username = users_collection.find_one({"username": User_Name})
-        if (existing_username is not None):
+        if existing_username:
             raise HTTPException(status_code=400, detail='Username already exists. Please choose a different username.')
 
         # Check if user with same email already exists
         existing_email = users_collection.find_one({"email": Email})
-        if (existing_email is not None):
+        if existing_email:
             raise HTTPException(status_code=400, detail='Email already exists. Please use a different email address.')
 
         # Fetch region from Cities collection based on provided City
@@ -99,9 +104,10 @@ async def register(
 
         # Insert the new user into the users collection
         users_collection.insert_one(user_data)
+        hobbies_collection.insert_one({"username":User_Name})
 
-        # Redirect to register success page with username as a query parameter
-        return RedirectResponse(url=f'/register_success?username={User_Name}', status_code=303)
+        # Redirect to the success page with user details in query parameters
+        return RedirectResponse(url=f'/register_success?User_Name={User_Name}&Full_Name={First_Name} {Last_Name}&Email={Email}&City={City}&Gender={Gender}', status_code=302)
 
     except HTTPException as http_err:
         raise http_err
@@ -110,9 +116,17 @@ async def register(
         raise HTTPException(status_code=500, detail=f"Error inserting user into database: {err}")
 
 @app.get('/register_success', response_class=HTMLResponse)
-async def register_success(request: Request, username: str):
-    context = {'request': request, 'username': username}
+async def register_success(request: Request, User_Name: str, Full_Name: str, Email: str, City: str, Gender: str):
+    context = {
+        'request': request,
+        'User_Name': User_Name,
+        'Full_Name': Full_Name,
+        'Email': Email,
+        'City': City,
+        'Gender': Gender
+    }
     return templates.TemplateResponse('register_success.html', context)
+
 
 @app.get('/login', response_class=HTMLResponse)
 async def login_form(request: Request):
@@ -128,8 +142,10 @@ async def login(request: Request, User_Name: str = Form(...), Password: str = Fo
             context = {'request': request, 'error': 'Invalid username or password'}
             return templates.TemplateResponse('login.html', context)
 
-        # Redirect to home page after successful login
-        return RedirectResponse(url='/index/', status_code=303)
+        # Set username in cookie (dummy authentication, replace with your actual authentication method)
+        response = RedirectResponse(url=f'/profile/{User_Name}', status_code=303)
+        response.set_cookie(key="username", value=User_Name)
+        return response
     
     except HTTPException as http_err:
         raise http_err
@@ -137,37 +153,132 @@ async def login(request: Request, User_Name: str = Form(...), Password: str = Fo
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Error during login: {err}")
 
-@app.get('/{user_id}/add_hobby', response_class=HTMLResponse)
-async def add_hobby_form(request: Request, user_id: str):
-    context = {'request': request, 'user_id': user_id}
+@app.get('/logout', response_class=HTMLResponse)
+async def logout(request: Request):
+    response = RedirectResponse(url='/login', status_code=303)
+    response.delete_cookie("username")
+    return response
+
+def retrieve_user_id(user_name):
+    user = users_collection.find_one({"username": user_name})
+    if user:
+        return user['_id']
+    else:
+        return None
+
+def retrieve_username(user_id):
+    user = users_collection.find_one({"_id": user_id})
+    if user:
+        return user['username']
+    else:
+        return None
+    
+@app.get('/api/hobbies/{username}', response_class=HTMLResponse)
+def get_user_hobbies(username):
+    pipeline = [
+        {"$match": {"username": username}},
+        {"$project": {"_id": 0, "hobby": 1}}
+    ]
+
+    result = db.hobbies.aggregate(pipeline)
+    hobbies = list(result)
+    hobbies_json = json.dumps(hobbies)
+
+    return hobbies_json
+
+# @app.get('/api/user_details/{username}', response_class=HTMLResponse)
+# async def get_user_details(request: Request, username: str):
+#     user = users_collection.find_one({"username": username})
+#     if user:
+#         user_details = {
+#             "username": user.get("username"),
+#             "email": user.get("email"),
+#             "first_name": user.get("firstname"),
+#             "last_name": user.get("lastname"),
+#             "phone_number": user.get("phone_number"),
+#             "full_address": user.get("full_address")
+#         }
+#         return JSONResponse(content=json.dumps(user_details))
+#     else:
+#         raise HTTPException(status_code=404, detail="User not found")
+
+@app.get('/profile/{username}', response_class=HTMLResponse)
+async def profile_page(request: Request, username: str):
+    user = users_collection.find_one({"username": username})
+    
+    if user:
+        hobbies = list(hobbies_collection.find({"user_id": str(user['_id'])}))
+        context = {'request': request, 'user_name': user['username'], 'user_id': str(user['_id']), 'hobbies': hobbies}
+        return templates.TemplateResponse('profile.html', context)
+    else:
+        raise HTTPException(status_code=404, detail="User not found")
+
+
+def add_hobby_to_user(username: str, hobby: str):
+    try:
+        # Find the user document by username
+        user_hobbies = hobbies_collection.find_one({"username": username})
+
+        if not user_hobbies:
+            raise HTTPException(status_code=404, detail=f"User with username {username} not found.")
+
+        # Get the previous hobbies
+        previous_hobbies = user_hobbies.get('hobbies', '')
+
+        # Update the hobbies field
+        new_hobbies = f"{previous_hobbies}, {hobby}" if previous_hobbies else hobby
+        hobbies_collection.update_one(
+            {"username": username},
+            {user_hobbies['hobbies'].append(new_hobbies)}
+        )
+        
+        print(f"Hobby '{hobby}' added successfully to user '{username}'.")
+   
+    except HTTPException as http_err:
+        print(f"HTTP error occurred: {http_err.detail}")
+   
+    except Exception as err:
+        print(f"An error occurred: {err}")
+
+@app.get('/{username}/add_hobby', response_class=HTMLResponse)
+async def add_hobby_form(request: Request, username: str):
+    context = {'request': request, 'username': username}
     return templates.TemplateResponse('add_hobby.html', context)
 
-@app.post('/{user_id}/add_hobby', response_class=HTMLResponse)
-async def add_hobby(user_id: str, hobby: str = Form(...)):
+@app.post('/{username}/hobbyAdd')
+async def hobbyAdd(username: str, hobby: str = Form(...)):
     try:
-        # Convert user_id to ObjectId
-        user_id = ObjectId(user_id)
-
-        # Check if the user_id exists in the users collection
-        existing_user = users_collection.find_one({"_id": user_id})
-        if not existing_user:
-            raise HTTPException(status_code=404, detail=f"User with user_id {user_id} not found.")
-
-        # Insert the hobby for the user into the hobbies collection
-        hobby_data = {
-            "user_id": user_id,
-            "hobby": hobby
-        }
+        new_hobby = {"username": username, "hobby": hobby}
+        result = db.hobbies.insert_one(new_hobby)
         
-        hobbies_collection.insert_one(hobby_data)
+        if result.inserted_id:
+            return {"message": "Hobby added successfully"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to add hobby")
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-        return HTMLResponse(f"Hobby '{hobby}' added successfully for user with user_id: {user_id}")
+@app.post('/api/hobbies/{username}/remove_hobby/{hobby}',response_class=HTMLResponse)
+async def remove_hobby(request: Request, username: str, hobby:str):
+    try:
+        user = hobbies_collection.find_one_and_delete({"username": username, "hobby": hobby})
+        return RedirectResponse(url=f"/profile/{username}", status_code=303)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
-    except HTTPException as http_err:
-        raise http_err
-    
-    except Exception as err:
-        raise HTTPException(status_code=500, detail=f"Error adding hobby: {err}")
+
+@app.get('/{username}/remove_hobbies', response_class=HTMLResponse)
+async def remove_hobby_form(request: Request, username: str):
+    context = {'request': request, 'user_name': username}
+    return templates.TemplateResponse('remove_hobbies.html', context)
+
+
+@app.get('/ADMIN', response_class=HTMLResponse)
+async def admin(request: Request):
+    context = {'request': request}
+    return templates.TemplateResponse('admin.html', context)
 
 @app.get('/ADMIN/show_all_users', response_class=HTMLResponse)
 async def show_all_users(request: Request):
@@ -232,4 +343,5 @@ async def calculator(request: Request, first_number: int = Form(...), second_num
         raise HTTPException(status_code=500, detail=f"Error performing calculations: {err}")
     
 if __name__ == '__main__':
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+    

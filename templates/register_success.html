@@ -3,14 +3,101 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registration Success</title>
+    <title>Registration Successful</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .user-info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: left;
+        }
+        .user-info label {
+            font-weight: bold;
+        }
+        .user-info ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .button-container {
+            margin-top: 20px;
+        }
+        .button-container a {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .button-container a button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            border-radius: 4px;
+        }
+        .button-container a button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
-    <h1>Registration Successful</h1>
-    <p>Successfully created user {{ username }}</p>
-    <p>
-        <a href="/login">Login Page</a> |
-        <a href="/index/">Home Page</a>
-    </p>
+    <div class="container">
+        <h1>Registration Successful!</h1>
+        <p>Your account has been successfully created.</p>
+        
+        <div class="user-info">
+            <p>Here are your account details:</p>
+            <ul>
+                <li><label>Username:</label> {{ User_Name }}</li>
+                <li><label>Full Name:</label> {{ Full_Name }}</li>
+                <li><label>Email:</label> {{ Email }}</li>
+                <li><label>City:</label> {{ City }}</li>
+                <li><label>Gender:</label> {{ Gender }}</li>
+            </ul>
+        </div>
+
+        <div class="button-container">
+            <a href="/login">
+                <button>Go to Login</button>
+            </a>
+            <a href="/">
+                <button>Go to Home Page</button>
+            </a>
+        </div>
+    </div>
 </body>
 </html>

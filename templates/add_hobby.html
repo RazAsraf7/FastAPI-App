@@ -1,17 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Hobby{% endblock %}
+
+{% block content %}
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Hobby</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            margin-bottom: 10px;
+        }
+
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <h1>Add Hobby for a User</h1>
-    <form action="/{{ user_id }}/add_hobby" method="post">
-        <label for="hobby">Hobby:</label>
-        <input type="text" id="hobby" name="hobby" required><br>
+    <div class="container">
+        <h1>Add Hobby</h1>
+        <form id="addHobbyForm" method="post" action="/{{ username }}/hobbyAdd" enctype="multipart/form-data">
+            <label for="hobbyInput">Add a hobby:</label>
+            <input type="text" id="hobbyInput" name="hobby">
+            <button type="submit">Add Hobby</button>
+            <button type="button" onclick="goBack('{{ username }}')">Back</button>
+        </form>
+        
+        <script>
+            function goBack(username) {
+                window.location.href = `/profile/${username}`;
+            }
+        </script>
+    </div>
 
-        <button type="submit">Add Hobby</button>
-    </form>
+    <script>
+        document.getElementById('addHobbyForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent the default form submission
+    
+            const hobby = document.getElementById('hobbyInput').value;
+            const formData = new FormData();
+            formData.append('hobby', hobby);
+    
+            try {
+                const response = await fetch(event.target.action, {
+                    method: event.target.method,
+                    body: formData
+                });
+    
+                if (response.ok) {
+                    alert('Hobby added successfully!');
+                    window.location.href = `/${username}/add_hobby`; // Redirect back to the add_hobby page
+                } else {
+                    const errorMessage = await response.text();
+                    alert('Failed to add hobby: ' + errorMessage);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
 </body>
 </html>
+{% endblock %}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        header {
+            background-color: #008CBA;
+            color: white;
+            padding: 10px 0;
+            text-align: center;
+            font-size: 24px;
+        }
+        nav {
+            display: flex;
+            justify-content: space-around;
+            background-color: #333;
+            padding: 10px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            padding: 20px;
+        }
+        .section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            background-color: #008CBA;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0073aa;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        Admin Dashboard
+    </header>
+    <nav>
+        <a href="/ADMIN/show_all_users">Manage Users</a>
+        <a href="/ADMIN/view_logs">View Logs</a>
+        <a href="/ADMIN/site_settings">Site Settings</a>
+    </nav>
+    <div class="container">
+        <div class="section">
+            <h2>Manage Users</h2>
+            <button onclick="window.location.href='/ADMIN/show_all_users'">View All Users</button>
+            <button onclick="window.location.href='/ADMIN/add_user'">Add New User</button>
+        </div>
+        <div class="section">
+            <h2>View Logs</h2>
+            <button onclick="window.location.href='/ADMIN/view_logs'">View Logs</button>
+        </div>
+        <div class="section">
+            <h2>Site Settings</h2>
+            <button onclick="window.location.href='/ADMIN/site_settings'">Site Settings</button>
+        </div>
+    </div>
+</body>
+</html>
