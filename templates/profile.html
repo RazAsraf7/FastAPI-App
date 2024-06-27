@@ -1,3 +1,8 @@
+{% extends 'base.html' %}
+
+{% block title %}{{user_name}} Profile{% endblock %}
+
+{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -67,7 +72,7 @@
         <section id="user-info">
             <h2>User Information</h2>
             <div id="userInfoContainer">
-                <p><strong>Username:</strong> <span id="user_name"></span></p>
+                <p><strong>Username:</strong> {{ user_name }}</p>
             </div>
             <a href="/{{ user_name }}/add_hobby" class="button">Add Hobby</a>
             <a href="/{{ user_name }}/remove_hobbies" class="button">Remove Hobbies</a>
@@ -104,3 +109,4 @@
     </script>
 </body>
 </html>
+{% endblock %}

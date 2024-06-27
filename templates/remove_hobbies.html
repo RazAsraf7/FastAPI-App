@@ -82,6 +82,21 @@
             padding: 10px;
             text-align: center;
         }
+        .back-button {
+            background-color: #4CAF50; /* Green */
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .back-button:hover {
+            background-color: #45a049; /* Darker green on hover */
+        }
     </style>
 </head>
 <body>
@@ -99,7 +114,7 @@
             <h2>Hobbies</h2>
             <ul id="hobbiesList"></ul>
         </section>
-        <button onclick="goToProfilePage()">Back to Profile Page</button>
+        <button class="back-button" onclick="goToProfilePage()">Back to Profile Page</button>
     </main>
     <footer>
         <p>&copy; 2024 DoMyDuda</p>
