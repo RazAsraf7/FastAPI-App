@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request, Form, Cookie, Response  # Import Response here
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.logger import logger
 from pymongo import MongoClient, ReturnDocument
 from bson import ObjectId
 import json
@@ -37,7 +38,7 @@ def is_authenticated(request: Request) -> bool:
 
 @app.get('/', response_class=HTMLResponse)
 async def index(request: Request, username: str = Cookie(default=None)):
-    context = {'request': request, 'username': username}
+    context = {'request': request, 'user_name': username}
     return templates.TemplateResponse('index.html', context)
 
 @app.get('/register', response_class=HTMLResponse)
@@ -158,7 +159,7 @@ async def login(request: Request, User_Name: str = Form(...), Password: str = Fo
 @app.get('/logout', response_class=HTMLResponse)
 async def logout(request: Request):
     response = RedirectResponse(url='/login', status_code=303)
-    response.delete_cookie("username")
+    response.delete_cookie("user_name")
     return response
 
 def retrieve_user_id(user_name):
@@ -244,7 +245,7 @@ def add_hobby_to_user(username: str, hobby: str):
 
 @app.get('/{username}/add_hobby', response_class=HTMLResponse)
 async def add_hobby_form(request: Request, username: str):
-    context = {'request': request, 'username': username}
+    context = {'request': request, 'user_name': username}
     return templates.TemplateResponse('add_hobby.html', context)
 
 @app.post('/{username}/hobbyAdd')
@@ -282,6 +283,13 @@ async def admin(request: Request):
     context = {'request': request}
     return templates.TemplateResponse('admin.html', context)
 
+@app.get('/ADMIN/view_logs', response_class=HTMLResponse)
+async def view_logs(request: Request):
+    with open('app.log', 'r') as f:
+        logs = f.read()
+    context = {'request': request, 'logs': logs}
+    return templates.TemplateResponse('logs.html', context)
+
 @app.get('/ADMIN/show_all_users', response_class=HTMLResponse)
 async def show_all_users(request: Request):
     try:
@@ -290,6 +298,40 @@ async def show_all_users(request: Request):
         return templates.TemplateResponse('show_all_users.html', context)
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Error retrieving users: {err}")
+
+@app.post('/ADMIN/add_user', response_class=HTMLResponse)
+async def add_user(request: Request):
+    try:
+        data = await request.form()
+        new_user = {
+            'username': data['username'],
+            'password': data['password'],
+            'firstname': data['firstname'],
+            'lastname': data['lastname'],
+            'phone_number': data['phone_number'],
+            'email': data['email'],
+            'full_address': data['full_address'],
+            'city': data['city'],
+            'region': data['region'],
+            'gender': data['gender'],
+        }
+        result = users_collection.insert_one(new_user)
+        return RedirectResponse(url='/ADMIN/show_all_users', status_code=303)
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Error adding user: {err}")
+
+@app.get('/ADMIN/add_user', response_class=HTMLResponse)
+async def add_user_form(request: Request):
+    context = {'request': request}
+    return templates.TemplateResponse('ADMIN_add_user.html', context)
+
+@app.post('/delete_user/{username}')
+async def delete_user(request: Request, username: str):
+    try:
+        result = users_collection.delete_one({'username': username})
+        return RedirectResponse(url='/ADMIN/show_all_users', status_code=303)
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"Error deleting user: {err}")
 
 @app.get('/available_people', response_class=HTMLResponse)
 async def get_available_people(request: Request):

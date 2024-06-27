@@ -81,10 +81,31 @@
             <h2>Hobbies</h2>
             <ul id="hobbiesList"></ul>
         </section>
+        <button class="logout-button" onclick="logout()">Logout</button>
     </main>
     <footer>
         <p>&copy; 2024 DoMyDuda</p>
     </footer>
+    <script>
+        function logout() {
+    fetch('/logout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Handle the response from the server
+        console.log(data);
+        // Redirect to the login page or perform any other necessary actions
+        window.location.href = '/login';
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', async function() {
             const username = '{{ user_name }}';

@@ -1,16 +1,76 @@
+{% extends 'admin_base.html' %}
+{% block title %}All Registered Users{% endblock %}
+{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Users</title>
+    <title>All Registered Users</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0 auto;
+            width: 50%;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+        .button {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        .button:hover {
+            background-color: #555;
+        }
+        .button:focus {
+            outline: none;
+        }
+        .button:active {
+            background-color: #444;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
     <h1>All Registered Users</h1>
     <ul>
         {% for user in users %}
-        <li>{{ user.firstname }} {{ user.lastname }} ({{ user.username }}) - {{ user.email }}</li>
+        <li>
+            <strong>{{ user.firstname }} {{ user.lastname }}</strong> ({{ user.username }}) - {{ user.email }}
+            <form action="/delete_user/{{ user.username }}" method="post">
+                <button type="submit">Delete</button>
+            </form>
+        </li>
         {% endfor %}
     </ul>
-</body>
+    <div class="button-container">
+        <button class="button" onclick="window.location.href='/ADMIN/add_user'">Add New User</button>
+    </div></body>
 </html>
+{% endblock %}
