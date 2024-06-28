@@ -9,7 +9,7 @@ import uvicorn
 import re
 
 # MongoDB connection URI
-uri = "mongodb+srv://raz:F4vy5JzhUg@dmd.hjdhwf6.mongodb.net/DMD?retryWrites=true&w=majority"
+uri = "mongodb://localhost:27017/"
 
 # Create a new client and connect to the server
 client = MongoClient(uri)
