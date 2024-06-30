@@ -1,16 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Available People{% endblock %}
+{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Available People</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-top: 30px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        li {
+            background-color: #fff;
+            padding: 15px;
+            margin: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            transition: transform 0.3s;
+        }
+
+        li:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
 <body>
-    <h1>Available People and Their Hobbies</h1>
+    <h1>Available People</h1>
     <ul>
-        {% for person in available_people %}
-        <li>{{ person }}</li>
+        {% for item in firstname_hobbies %}
+            <li>{{ item }}</li>
         {% endfor %}
     </ul>
 </body>
 </html>
+{% endblock %}

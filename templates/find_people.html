@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Find People{% endblock %}
+{% block content %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shared Hobbies</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .match {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #e6f7ff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+        .match p {
+            margin: 0;
+            font-size: 18px;
+            color: #333;
+        }
+        .match:hover {
+            background-color: #cceeff;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>People With The Same Hobbies As You!</h1>
+        <ul id="matches-list">
+            {% for match in matches %}
+                <li class="match">
+                    <p>{{ match }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+</html>
+{% endblock %}

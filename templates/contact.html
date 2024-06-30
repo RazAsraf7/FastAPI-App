@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Contact Us{% endblock %}
+{% block content %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contact Us - DoMyDuda</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        p {
+            font-size: 18px;
+            color: #555;
+            line-height: 1.6;
+            text-align: center;
+        }
+        .contact-info {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .contact-info p {
+            font-size: 20px;
+            color: #333;
+        }
+        .contact-info a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contact Us</h1>
+        <p>If you have any questions, suggestions, or just want to get in touch, please contact us using the information below:</p>
+        <div class="contact-info">
+            <p>Phone: +972-54-5973537</p>
+            <p>Email: <a href="mailto:razasraf7@gmail.com">razasraf7@gmail.com</a></p>
+        </div>
+    </div>
+</body>
+</html>
+{% endblock %}
