@@ -1,16 +1,21 @@
-from fastapi import FastAPI, HTTPException, Request, Form, Cookie, Response  # Import Response here
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, PlainTextResponse
+from fastapi import FastAPI, HTTPException, Request, Form, Cookie
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.logger import logger
-from pymongo import MongoClient, ReturnDocument
-from bson import ObjectId
+from pymongo import MongoClient
 from random import randint
 import json
+from dotenv import load_dotenv
+import os
 import uvicorn
 import re
 
+load_dotenv()
+USERNAME = os.getenv("USERNAME")
+ROOT_PASSWORD = os.getenv("ROOT_PASSWORD")
+PORT = os.getenv("PORT")
+HOST = os.getenv("HOST")
 # MongoDB connection URI
-uri = "mongodb://localhost:27017/"
+uri = f"mongodb://{USERNAME}:{ROOT_PASSWORD}@{HOST}:{PORT}/"
 
 # Create a new client and connect to the server
 client = MongoClient(uri)
@@ -27,6 +32,7 @@ try:
     print("Pinged your deployment. You successfully connected to MongoDB!")
 except Exception as e:
     print(e)
+
 
 app = FastAPI()
 
@@ -479,6 +485,6 @@ async def calculator(request: Request, first_number: int = Form(...), second_num
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Error performing calculations: {err}")
     
-if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# if __name__ == '__main__':
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
     
