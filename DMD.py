@@ -1,8 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request, Form, Cookie
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from pymongo import MongoClient
-from random import randint
+from pymongo import MongoClient, errors
 import json
 from dotenv import load_dotenv
 import os
@@ -14,10 +13,10 @@ USERNAME = os.getenv("USERNAME")
 ROOT_PASSWORD = os.getenv("ROOT_PASSWORD")
 PORT = os.getenv("PORT")
 HOST = os.getenv("HOST")
+
+print(USERNAME,ROOT_PASSWORD,PORT,HOST)
 # MongoDB connection URI
 uri = f"mongodb://{USERNAME}:{ROOT_PASSWORD}@{HOST}:{PORT}/"
-
-# Create a new client and connect to the server
 client = MongoClient(uri)
 
 # Access database and collections
@@ -28,10 +27,101 @@ cities_collection = db['cities']
 
 # Check MongoDB connection
 try:
-    client.admin.command('ping')
-    print("Pinged your deployment. You successfully connected to MongoDB!")
-except Exception as e:
-    print(e)
+    client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+    client.server_info()  # Trigger exception if cannot connect to the server
+    print("Connected to MongoDB successfully")
+except errors.ServerSelectionTimeoutError as err:
+    print(f"Failed to connect to MongoDB: {err}")
+
+cities = [
+    {'name': 'Acre', 'district': 'Northern District'},
+    {'name': 'Arad', 'district': 'Southern District'},
+    {'name': 'Ariel', 'district': 'Judea and Samaria Area'},
+    {'name': 'Ashdod', 'district': 'Southern District'},
+    {'name': 'Ashkelon', 'district': 'Southern District'},
+    {'name': 'Azor', 'district': 'Central District'},
+    {'name': 'Baqa al-Gharbiyye', 'district': 'Haifa District'},
+    {'name': 'Bat Yam', 'district': 'Tel Aviv District'},
+    {'name': 'Beersheba', 'district': 'Southern District'},
+    {'name': 'Beit Shemesh', 'district': 'Jerusalem District'},
+    {'name': 'Beitar Illit', 'district': 'Judea and Samaria Area'},
+    {'name': 'Bnei Ayish', 'district': 'Central District'},
+    {'name': 'Bnei Brak', 'district': 'Tel Aviv District'},
+    {'name': 'Dimona', 'district': 'Southern District'},
+    {'name': 'Eilat', 'district': 'Southern District'},
+    {'name': 'Giv\'at Ze\'ev', 'district': 'Judea and Samaria Area'},
+    {'name': 'Givatayim', 'district': 'Tel Aviv District'},
+    {'name': 'Hadera', 'district': 'Haifa District'},
+    {'name': 'Haifa', 'district': 'Haifa District'},
+    {'name': 'Herzliya', 'district': 'Central District'},
+    {'name': 'Herzliya Pituach', 'district': 'Central District'},
+    {'name': 'Hod HaSharon', 'district': 'Central District'},
+    {'name': 'Holon', 'district': 'Tel Aviv District'},
+    {'name': 'Jerusalem', 'district': 'Jerusalem District'},
+    {'name': 'Jezreel Valley', 'district': 'Northern District'},
+    {'name': 'Karmiel', 'district': 'Northern District'},
+    {'name': 'Kfar Saba', 'district': 'Central District'},
+    {'name': 'Kfar Shmaryahu', 'district': 'Central District'},
+    {'name': 'Kfar Yona', 'district': 'Central District'},
+    {'name': 'Kiryat Arba', 'district': 'Judea and Samaria Area'},
+    {'name': 'Kiryat Ata', 'district': 'Northern District'},
+    {'name': 'Kiryat Bialik', 'district': 'Northern District'},
+    {'name': 'Kiryat Gat', 'district': 'Southern District'},
+    {'name': 'Kiryat Ono', 'district': 'Central District'},
+    {'name': 'Kiryat Shmona', 'district': 'Northern District'},
+    {'name': 'Kiryat Tiv\'on', 'district': 'Northern District'},
+    {'name': 'Kiryat Yam', 'district': 'Northern District'},
+    {'name': 'Lod', 'district': 'Central District'},
+    {'name': 'Ma\'ale Adumim', 'district': 'Judea and Samaria Area'},
+    {'name': 'Ma\'alot-Tarshiha', 'district': 'Northern District'},
+    {'name': 'Mevasseret Zion', 'district': 'Jerusalem District'},
+    {'name': 'Migdal', 'district': 'Northern District'},
+    {'name': 'Migdal HaEmek', 'district': 'Northern District'},
+    {'name': 'Modi\'in Illit', 'district': 'Judea and Samaria Area'},
+    {'name': 'Modiin-Maccabim-Reut', 'district': 'Central District'},
+    {'name': 'Nahariya', 'district': 'Northern District'},
+    {'name': 'Nazareth', 'district': 'Northern District'},
+    {'name': 'Nesher', 'district': 'Haifa District'},
+    {'name': 'Netanya', 'district': 'Central District'},
+    {'name': 'Netivot', 'district': 'Southern District'},
+    {'name': 'Nof HaGalil', 'district': 'Northern District'},
+    {'name': 'Ofakim', 'district': 'Southern District'},
+    {'name': 'Or Akiva', 'district': 'Haifa District'},
+    {'name': 'Or Yehuda', 'district': 'Central District'},
+    {'name': 'Pardes Hanna-Karkur', 'district': 'Haifa District'},
+    {'name': 'Petah Tikva', 'district': 'Central District'},
+    {'name': 'Raanana', 'district': 'Central District'},
+    {'name': 'Ramat Gan', 'district': 'Tel Aviv District'},
+    {'name': 'Ramat HaSharon', 'district': 'Central District'},
+    {'name': 'Ramla', 'district': 'Central District'},
+    {'name': 'Rishon LeZion', 'district': 'Central District'},
+    {'name': 'Rosh HaAyin', 'district': 'Central District'},
+    {'name': 'Rosh HaNikra', 'district': 'Northern District'},
+    {'name': 'Safed', 'district': 'Northern District'},
+    {'name': 'Sakhnin', 'district': 'Northern District'},
+    {'name': 'Sderot', 'district': 'Southern District'},
+    {'name': 'Shfar\'am', 'district': 'Northern District'},
+    {'name': 'Shoham', 'district': 'Central District'},
+    {'name': 'Tamra', 'district': 'Northern District'},
+    {'name': 'Tel Aviv-Yafo', 'district': 'Tel Aviv District'},
+    {'name': 'Tiberias', 'district': 'Northern District'},
+    {'name': 'Tirat Carmel', 'district': 'Haifa District'},
+    {'name': 'Tirat Yehuda', 'district': 'Central District'},
+    {'name': 'Tira', 'district': 'Central District'},
+    {'name': 'Tzur Hadassah', 'district': 'Jerusalem District'},
+    {'name': 'Umm al-Fahm', 'district': 'Haifa District'},
+    {'name': 'Yavne', 'district': 'Central District'},
+    {'name': 'Yehud-Monosson', 'district': 'Central District'},
+    {'name': 'Yokneam Illit', 'district': 'Northern District'},
+    {'name': 'Zikhron Ya\'akov', 'district': 'Haifa District'}
+]
+
+for city in cities:
+    if not cities_collection.find_one({'name': city['name']}):
+        cities_collection.insert_one(city)
+
+# Output the result
+print(f"Inserted {len(cities)} documents if not already present")
 
 
 app = FastAPI()
@@ -485,6 +575,6 @@ async def calculator(request: Request, first_number: int = Form(...), second_num
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Error performing calculations: {err}")
     
-# if __name__ == '__main__':
-#     uvicorn.run(app, host="0.0.0.0", port=8000)
+if __name__ == '__main__':
+    uvicorn.run(app, host="0.0.0.0", port=8000)
     
