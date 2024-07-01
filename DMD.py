@@ -1,16 +1,21 @@
-from fastapi import FastAPI, HTTPException, Request, Form, Cookie, Response  # Import Response here
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, PlainTextResponse
+from fastapi import FastAPI, HTTPException, Request, Form, Cookie
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.logger import logger
-from pymongo import MongoClient, ReturnDocument
-from bson import ObjectId
-from random import randint
+from pymongo import MongoClient
+import os
+from dotenv import load_dotenv
 import json
 import uvicorn
 import re
 
+load_dotenv()
+USERNAME = os.getenv("USERNAME")
+ROOT_PASSWORD = os.getenv("ROOT_PASSWORD")
+PORT = os.getenv("PORT")
+HOST=os.getenv("HOST")
+
 # MongoDB connection URI
-uri = "mongodb://localhost:27017/"
+uri = f"mongodb://{USERNAME}:{ROOT_PASSWORD}@{HOST}:{PORT}/"
 
 # Create a new client and connect to the server
 client = MongoClient(uri)
