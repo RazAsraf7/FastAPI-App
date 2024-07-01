@@ -9,14 +9,14 @@ import uvicorn
 import re
 
 load_dotenv()
-USERNAME = os.getenv("USERNAME")
+ROOT_USERNAME = os.getenv("ROOT_USERNAME")
 ROOT_PASSWORD = os.getenv("ROOT_PASSWORD")
 PORT = os.getenv("PORT")
 HOST = os.getenv("HOST")
 
-print(USERNAME,ROOT_PASSWORD,PORT,HOST)
+print(ROOT_USERNAME,ROOT_PASSWORD,PORT,HOST)
 # MongoDB connection URI
-uri = f"mongodb://{USERNAME}:{ROOT_PASSWORD}@{HOST}:{PORT}/"
+uri = f"mongodb://root:212928139@localhost:27017/"
 client = MongoClient(uri)
 
 # Access database and collections
@@ -45,6 +45,7 @@ cities = [
     {'name': 'Beersheba', 'district': 'Southern District'},
     {'name': 'Beit Shemesh', 'district': 'Jerusalem District'},
     {'name': 'Beitar Illit', 'district': 'Judea and Samaria Area'},
+    {'name': 'Beer Yaakov', 'district': 'Central District'},
     {'name': 'Bnei Ayish', 'district': 'Central District'},
     {'name': 'Bnei Brak', 'district': 'Tel Aviv District'},
     {'name': 'Dimona', 'district': 'Southern District'},
@@ -196,7 +197,7 @@ async def register(
             "region": region,
             "username": User_Name,
             "email": Email,
-            "password": Password,
+            "password": str(hash(Password)),
             "full_name": f'{First_Name} {Last_Name}'
         }
 
@@ -236,7 +237,7 @@ async def login(request: Request, User_Name: str = Form(...), Password: str = Fo
         return RedirectResponse(url='/ADMIN', status_code=303)
     try:
         # Validate user credentials
-        user = users_collection.find_one({"username": User_Name, "password": Password})
+        user = users_collection.find_one({"username": User_Name, "password": str(hash(Password))})
         if not user:
             context = {'request': request, 'error': 'Invalid username or password'}
             return templates.TemplateResponse('login.html', context)
@@ -575,6 +576,6 @@ async def calculator(request: Request, first_number: int = Form(...), second_num
     except Exception as err:
         raise HTTPException(status_code=500, detail=f"Error performing calculations: {err}")
     
-if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+# if __name__ == '__main__':
+#     uvicorn.run(app, host="0.0.0.0", port=8000)
     
