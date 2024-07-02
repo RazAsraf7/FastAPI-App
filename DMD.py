@@ -1,13 +1,10 @@
 from fastapi import FastAPI, HTTPException, Request, Form, Cookie
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-<<<<<<< HEAD
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
-=======
 from pymongo import MongoClient, errors
->>>>>>> 0ae1c31
 import json
 from dotenv import load_dotenv
 import os
@@ -15,7 +12,6 @@ import uvicorn
 import re
 
 load_dotenv()
-<<<<<<< HEAD
 USERNAME = os.getenv("USERNAME")
 ROOT_PASSWORD = os.getenv("ROOT_PASSWORD")
 PORT = os.getenv("PORT")
@@ -23,16 +19,15 @@ HOST=os.getenv("HOST")
 
 # MongoDB connection URI
 uri = f"mongodb://{USERNAME}:{ROOT_PASSWORD}@{HOST}:{PORT}/"
-=======
+
 ROOT_USERNAME = os.getenv("ROOT_USERNAME")
 ROOT_PASSWORD = os.getenv("ROOT_PASSWORD")
 PORT = os.getenv("PORT")
 HOST = os.getenv("HOST")
->>>>>>> 0ae1c31
 
 print(ROOT_USERNAME,ROOT_PASSWORD,PORT,HOST)
 # MongoDB connection URI
-uri = f"mongodb://root:212928139@localhost:27017/"
+# uri = f"mongodb://root:212928139@localhost:27017/"
 client = MongoClient(uri)
 
 # Access database and collections
