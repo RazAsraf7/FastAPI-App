@@ -12,13 +12,13 @@ import uvicorn
 import re
 
 load_dotenv()
-USERNAME = os.getenv("USERNAME")
-ROOT_PASSWORD = os.getenv("ROOT_PASSWORD")
-PORT = os.getenv("PORT")
-HOST=os.getenv("HOST")
+username = os.getenv("USERNAME")
+password = os.getenv("ROOT_PASSWORD")
+port = os.getenv("PORT")
+host = os.getenv("HOST")
 
 # MongoDB connection URI
-uri = f"mongodb://{USERNAME}:{ROOT_PASSWORD}@{HOST}:{PORT}/"
+uri = f"mongodb://{username}:{password}@{host}:{port}/"
 
 ROOT_USERNAME = os.getenv("ROOT_USERNAME")
 ROOT_PASSWORD = os.getenv("ROOT_PASSWORD")

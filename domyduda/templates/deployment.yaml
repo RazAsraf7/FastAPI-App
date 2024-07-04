@@ -35,6 +35,27 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          env:
+            - name: USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-uri
+                  key: username
+            - name: ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-uri
+                  key: password
+            - name: PORT
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-uri
+                  key: port
+            - name: HOST
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-uri
+                  key: host
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
