@@ -14,7 +14,6 @@ pipeline {
         ROOT_PASSWORD = credentials('mongodb_root_password')
         HOST = 'mongodb'
         PORT = '27017'
-        mongodb_root_password = '212928139'
     }
     stages {
         stage('Check Kubernetes Connection') {
