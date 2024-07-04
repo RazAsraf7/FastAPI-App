@@ -1,0 +1,9 @@
+architecture: standalone
+auth:
+  rootPassword: "212928139"
+  usernames:
+    - raz
+  passwords:
+    - 12131415
+  databases:
+    - DMD
