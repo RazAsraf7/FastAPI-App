@@ -1,7 +1,6 @@
 pipeline {
     agent {
         kubernetes {
-            yamlFile 'mongodb-architecture.yaml'
             defaultContainer 'domyduda-ffb7fd-bxqsw'
         }
     }
@@ -10,8 +9,8 @@ pipeline {
         GITHUB_CREDS = credentials('github_credentials')
         DOCKER_IMAGE = 'razasraf7/domyduda'
         GITHUB_REPOSITORY = 'FastAPI-App'
-        USERNAME = credentials('mongodb_username')
-        ROOT_PASSWORD = credentials('mongodb_root_password')
+        USERNAME = 'root'
+        ROOT_PASSWORD = '212928139'
         HOST = 'mongodb'
         PORT = '27017'
     }
@@ -35,6 +34,11 @@ pipeline {
                 sh 'helm install mongodb mongodb/mongodb -f mongodb-architecture.yaml'
             }
         }
+        stage('Get DoMyDuda') {
+            steps {
+                sh 'helm install domyduda domyduda'
+            }
+        }
         stage('Login to Docker Hub and GitHub') {
             steps {
                 script {
@@ -47,16 +51,9 @@ pipeline {
                 }
             }
         }
-        stage('Pulling Docker Image') {
+        stage('Say when done') {
             steps {
-                script {
-                    docker.image(DOCKER_IMAGE).pull()
-                }
-            }
-        }
-        stage('Run Docker Image') {
-            steps {
-                sh 'docker run -d -p 8000:8000 -e USERNAME=${USERNAME} -e ROOT_PASSWORD=${ROOT_PASSWORD} -e HOST=${HOST} -e PORT=${PORT} --name domyduda ${DOCKER_IMAGE}'
+                sh 'echo "Done!"'
             }
         }
     }
