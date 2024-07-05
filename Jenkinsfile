@@ -42,7 +42,7 @@ pipeline {
                     name: workspace-volume
                     readOnly: false
               - name: domyduda
-                image: your-docker-image  # Replace with your actual image
+                image: razasraf7/domyduda 
                 command: ['cat']
                 tty: true
                 resources:
