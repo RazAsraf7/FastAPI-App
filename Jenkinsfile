@@ -7,7 +7,7 @@ pipeline {
             spec:
               containers:
               - name: helm
-                image: alpine/helm:3.9.0
+                image: alpine/helm:latest
                 command:
                 - cat
                 tty: true
