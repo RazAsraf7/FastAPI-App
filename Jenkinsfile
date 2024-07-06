@@ -32,6 +32,9 @@ pipeline {
                 container('helm') {
                     script {
                         sh '''
+                        # Remove any existing chart directories to avoid conflicts
+                        rm -rf mongodb
+
                         # Add the Bitnami repository and update
                         helm repo add bitnami https://charts.bitnami.com/bitnami
                         helm repo update
@@ -64,6 +67,7 @@ pipeline {
                     script {
                         sh '''
                         
+
                         # Deploy the Helm chart
                         helm install my-app domyduda
                         '''

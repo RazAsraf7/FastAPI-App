@@ -1,6 +1,4 @@
-architecture: replicaset
 auth:
-  enabled: true
-  rootUser: root
-  rootPassword: "212928139"
-replicaSetName: rs0
+  rootPassword: "212928139"  # Ensure the password is enclosed in quotes
+  username: "root"
+  password: "212928139"
