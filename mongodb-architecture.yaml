@@ -2,5 +2,5 @@ architecture: replicaset
 auth:
   enabled: true
   rootUser: root
-  rootPassword: 212928139
+  rootPassword: "212928139"
 replicaSetName: rs0
