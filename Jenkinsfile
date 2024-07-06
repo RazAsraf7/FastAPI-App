@@ -24,7 +24,7 @@ pipeline {
         ROOT_PASSWORD = '212928139'
         HOST = 'mongodb'
         PORT = '27017'
-        MONGO_URI = "mongodb://USERNAME:ROOT_PASSWORD@HOST:PORT/"
+        MONGO_URI = "mongodb://$USERNAME:$ROOT_PASSWORD@$HOST:$PORT/"
     }
     stages {
         stage('Deploy MongoDB') {
@@ -51,11 +51,8 @@ pipeline {
                         # Navigate to the directory containing the Helm chart
                         cd domyduda
 
-                        # Package the Helm chart
-                        helm package .
-
                         # Deploy the Helm chart
-                        helm install my-app ./domyduda-0.1.0.tgz --set mongodb.uri=$MONGO_URI
+                        helm install my-app domyduda domyduda
                         '''
                     }
                 }
@@ -70,7 +67,7 @@ pipeline {
                         # Wait for a few seconds to ensure the application is up
                         sleep 30
                         # Check if the application is running correctly
-                        kubectl run -i --rm --tty busybox --image=busybox --restart=Never -- curl -f http://my-app.default.svc.cluster.local:8000/ || exit 1
+                        kubectl port-forward svc/domyduda 8000:8000
                         '''
                     }
                 }
@@ -83,8 +80,8 @@ pipeline {
                 script {
                     sh '''
                     # Uninstall the application and MongoDB
-                    helm uninstall my-app
-                    helm uninstall my-mongodb
+                    helm uninstall my-app || true
+                    helm uninstall my-mongodb || true
                     '''
                 }
             }

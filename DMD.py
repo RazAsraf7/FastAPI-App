@@ -150,6 +150,10 @@ async def index(request: Request, username: str = Cookie(default=None)):
     context = {'request': request, 'user_name': username}
     return templates.TemplateResponse('index.html', context)
 
+@app.get('/health',response_class=HTMLResponse)
+async def health_check(request: Request):
+    return "OK"
+
 @app.get('/register', response_class=HTMLResponse)
 async def register_form(request: Request):
     try:
