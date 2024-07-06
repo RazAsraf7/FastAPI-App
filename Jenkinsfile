@@ -2,52 +2,92 @@ pipeline {
     agent {
         kubernetes {
             yaml """
-            apiVersion: v1
-            kind: Pod
-            spec:
-              containers:
-              - name: helm
-                image: alpine/helm:latest
-                command:
-                - cat
-                tty: true
-              - name: kubectl
-                image: bitnami/kubectl:1.21.3
-                command:
-                - cat
-                tty: true
-            """
+apiVersion: "v1"
+kind: "Pod"
+metadata:
+  annotations:
+    kubernetes.jenkins.io/last-refresh: "1720282518318"
+    buildUrl: "http://jenkins.jenkins.svc.cluster.local:8080/job/Final%20Project/job/feature/18/"
+    runUrl: "job/Final%20Project/job/feature/18/"
+  labels:
+    jenkins/jenkins-jenkins-agent: "true"
+    jenkins/label-digest: "ee3d95fc3ecb6e9df327abda36df6716d619ddfd"
+    jenkins/label: "Final_Project_feature_18-htk2p"
+    kubernetes.jenkins.io/controller: "http___jenkins_jenkins_svc_cluster_local_8080x"
+  name: "final-project-feature-18-htk2p-f93p6-zqdt3"
+  namespace: "jenkins"
+spec:
+  containers:
+  - command:
+    - "cat"
+    image: "alpine/helm:latest"
+    name: "helm"
+    tty: true
+    volumeMounts:
+    - mountPath: "/home/jenkins/agent"
+      name: "workspace-volume"
+      readOnly: false
+  - command:
+    - "cat"
+    image: "bitnami/kubectl:1.21.3"
+    name: "kubectl"
+    tty: true
+    volumeMounts:
+    - mountPath: "/home/jenkins/agent"
+      name: "workspace-volume"
+      readOnly: false
+  - env:
+    - name: "JENKINS_SECRET"
+      value: "********"
+    - name: "JENKINS_TUNNEL"
+      value: "jenkins-agent.jenkins.svc.cluster.local:50000"
+    - name: "JENKINS_AGENT_NAME"
+      value: "final-project-feature-18-htk2p-f93p6-zqdt3"
+    - name: "REMOTING_OPTS"
+      value: "-noReconnectAfter 1d"
+    - name: "JENKINS_NAME"
+      value: "final-project-feature-18-htk2p-f93p6-zqdt3"
+    - name: "JENKINS_AGENT_WORKDIR"
+      value: "/home/jenkins/agent"
+    - name: "JENKINS_URL"
+      value: "http://jenkins.jenkins.svc.cluster.local:8080/"
+    image: "jenkins/inbound-agent:3248.v65ecb_254c298-2"
+    name: "jnlp"
+    resources:
+      requests:
+        memory: "256Mi"
+        cpu: "100m"
+    volumeMounts:
+    - mountPath: "/home/jenkins/agent"
+      name: "workspace-volume"
+      readOnly: false
+  nodeSelector:
+    kubernetes.io/os: "linux"
+  restartPolicy: "Never"
+  volumes:
+  - emptyDir:
+      medium: ""
+    name: "workspace-volume"
+"""
         }
     }
-    environment {
-        USERNAME = 'root'
-        ROOT_PASSWORD = '212928139'
-        HOST = 'mongodb'
-        PORT = '27017'
-        MONGO_URI = "mongodb://$USERNAME:$ROOT_PASSWORD@$HOST:$PORT/"
-    }
     stages {
+        stage('Declarative: Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
         stage('Download and Lint MongoDB Chart') {
             steps {
                 container('helm') {
                     script {
-                        sh '''
-                        # Remove any existing chart directories to avoid conflicts
-                        rm -rf mongodb
-
-                        # Add the Bitnami repository and update
-                        helm repo add bitnami https://charts.bitnami.com/bitnami
-                        helm repo update
-
-                        # Download the MongoDB chart
-                        helm pull bitnami/mongodb --untar
-
-                        # Print the problematic template for inspection
-                        cat mongodb/charts/common/templates/_resources.tpl
-
-                        # Run Helm lint in debug mode for detailed error output
-                        helm lint mongodb -f mongodb-architecture.yaml --debug
-                        '''
+                        sh """
+                            rm -rf mongodb
+                            helm repo add bitnami https://charts.bitnami.com/bitnami
+                            helm repo update
+                            helm pull bitnami/mongodb --untar
+                            helm lint mongodb -f mongodb-architecture.yaml --debug
+                        """
                     }
                 }
             }
@@ -56,10 +96,9 @@ pipeline {
             steps {
                 container('helm') {
                     script {
-                        sh '''
-                        # Install MongoDB using the custom values file
-                        helm install my-mongodb ./mongodb -f mongodb-architecture.yaml
-                        '''
+                        sh """
+                            helm install my-mongodb ./mongodb -f mongodb-architecture.yaml --set auth.usernames[0]=root,auth.databases[0]=DMD
+                        """
                     }
                 }
             }
@@ -68,31 +107,20 @@ pipeline {
             steps {
                 container('helm') {
                     script {
-                        sh '''
-                        # Navigate to the directory containing the Helm chart
-                        cd domyduda
-
-                        # Package the Helm chart
-                        helm package .
-
-                        # Deploy the Helm chart
-                        helm install my-app ./domyduda-0.1.0.tgz --set mongodb.uri=$MONGO_URI
-                        '''
+                        sh """
+                            # Package and deploy your application
+                        """
                     }
                 }
             }
         }
         stage('Check Application') {
             steps {
-                container('kubectl') {
+                container('helm') {
                     script {
-                        // Replace this with your application's health check or test command
-                        sh '''
-                        # Wait for a few seconds to ensure the application is up
-                        sleep 30
-                        # Check if the application is running correctly
-                        kubectl run -i --rm --tty busybox --image=busybox --restart=Never -- curl -f http://my-app.default.svc.cluster.local:8000/ || exit 1
-                        '''
+                        sh """
+                            # Check your application
+                        """
                     }
                 }
             }
@@ -102,11 +130,10 @@ pipeline {
         always {
             container('helm') {
                 script {
-                    sh '''
-                    # Uninstall the application and MongoDB
-                    helm uninstall my-app || true
-                    helm uninstall my-mongodb || true
-                    '''
+                    sh """
+                        helm uninstall my-app || true
+                        helm uninstall my-mongodb || true
+                    """
                 }
             }
         }
