@@ -42,6 +42,9 @@ pipeline {
                         # Download the MongoDB chart
                         helm pull bitnami/mongodb --untar
 
+                        # Print the problematic template for inspection
+                        cat mongodb/charts/common/templates/_resources.tpl
+
                         # Lint the MongoDB chart
                         helm lint mongodb -f mongodb-architecture.yaml
                         '''
@@ -66,10 +69,14 @@ pipeline {
                 container('helm') {
                     script {
                         sh '''
-                        
+                        # Navigate to the directory containing the Helm chart
+                        cd domyduda
+
+                        # Package the Helm chart
+                        helm package .
 
                         # Deploy the Helm chart
-                        helm install my-app domyduda
+                        helm install my-app ./domyduda-0.1.0.tgz --set mongodb.uri=$MONGO_URI
                         '''
                     }
                 }
