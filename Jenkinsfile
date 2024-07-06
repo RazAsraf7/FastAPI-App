@@ -7,12 +7,12 @@ pipeline {
             spec:
               containers:
               - name: helm
-                image: alpine/helm:3.5.4
+                image: alpine/helm:3.9.0
                 command:
                 - cat
                 tty: true
               - name: kubectl
-                image: bitnami/kubectl:1.20
+                image: bitnami/kubectl:1.21.3
                 command:
                 - cat
                 tty: true
@@ -45,8 +45,8 @@ pipeline {
                         # Print the problematic template for inspection
                         cat mongodb/charts/common/templates/_resources.tpl
 
-                        # Lint the MongoDB chart
-                        helm lint mongodb -f mongodb-architecture.yaml
+                        # Run Helm lint in debug mode for detailed error output
+                        helm lint mongodb -f mongodb-architecture.yaml --debug
                         '''
                     }
                 }
