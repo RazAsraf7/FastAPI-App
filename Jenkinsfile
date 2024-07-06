@@ -27,6 +27,18 @@ pipeline {
         MONGO_URI = "mongodb://$USERNAME:$ROOT_PASSWORD@$HOST:$PORT/"
     }
     stages {
+        stage('Lint Helm Chart') {
+            steps {
+                container('helm') {
+                    script {
+                        sh '''
+                        # Lint the Helm chart to check for issues
+                        helm lint bitnami/mongodb -f mongodb-architecture.yaml
+                        '''
+                    }
+                }
+            }
+        }
         stage('Deploy MongoDB') {
             steps {
                 container('helm') {
@@ -48,11 +60,8 @@ pipeline {
                 container('helm') {
                     script {
                         sh '''
-                        # Navigate to the directory containing the Helm chart
-                        cd domyduda
-
                         # Deploy the Helm chart
-                        helm install my-app domyduda domyduda
+                        helm install my-app domyduda
                         '''
                     }
                 }
@@ -67,7 +76,7 @@ pipeline {
                         # Wait for a few seconds to ensure the application is up
                         sleep 30
                         # Check if the application is running correctly
-                        kubectl port-forward svc/domyduda 8000:8000
+                        kubectl run -i --rm --tty busybox --image=busybox --restart=Never -- curl -f http://my-app.default.svc.cluster.local:8000/ || exit 1
                         '''
                     }
                 }

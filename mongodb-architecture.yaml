@@ -1,9 +1,6 @@
-architecture: standalone
+architecture: replicaset
 auth:
-  rootPassword: "212928139"
-  usernames:
-    - raz
-  passwords:
-    - 12131415
-  databases:
-    - DMD
+  enabled: true
+  rootUser: root
+  rootPassword: 212928139
+replicaSetName: rs0
