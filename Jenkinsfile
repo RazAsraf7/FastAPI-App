@@ -27,13 +27,20 @@ pipeline {
         MONGO_URI = "mongodb://$USERNAME:$ROOT_PASSWORD@$HOST:$PORT/"
     }
     stages {
-        stage('Lint Helm Chart') {
+        stage('Download and Lint MongoDB Chart') {
             steps {
                 container('helm') {
                     script {
                         sh '''
-                        # Lint the Helm chart to check for issues
-                        helm lint bitnami/mongodb -f mongodb-architecture.yaml
+                        # Add the Bitnami repository and update
+                        helm repo add bitnami https://charts.bitnami.com/bitnami
+                        helm repo update
+
+                        # Download the MongoDB chart
+                        helm pull bitnami/mongodb --untar
+
+                        # Lint the MongoDB chart
+                        helm lint mongodb -f mongodb-architecture.yaml
                         '''
                     }
                 }
@@ -44,12 +51,8 @@ pipeline {
                 container('helm') {
                     script {
                         sh '''
-                        # Add the Bitnami repository and update
-                        helm repo add bitnami https://charts.bitnami.com/bitnami
-                        helm repo update
-
                         # Install MongoDB using the custom values file
-                        helm install my-mongodb bitnami/mongodb -f mongodb-architecture.yaml
+                        helm install my-mongodb ./mongodb -f mongodb-architecture.yaml
                         '''
                     }
                 }
@@ -60,6 +63,7 @@ pipeline {
                 container('helm') {
                     script {
                         sh '''
+                        
                         # Deploy the Helm chart
                         helm install my-app domyduda
                         '''
