@@ -6,18 +6,16 @@ pipeline {
             kind: Pod
             spec:
               containers:
-              - name: docker
-                image: docker:20.10.8
+              - name: helm
+                image: alpine/helm:3.5.4
                 command:
                 - cat
                 tty: true
-                volumeMounts:
-                - name: docker-sock
-                  mountPath: /var/run/docker.sock
-              volumes:
-              - name: docker-sock
-                hostPath:
-                  path: /var/run/docker.sock
+              - name: kubectl
+                image: bitnami/kubectl:1.20
+                command:
+                - cat
+                tty: true
             """
         }
     }
@@ -29,23 +27,35 @@ pipeline {
         MONGO_URI = "mongodb://USERNAME:ROOT_PASSWORD@HOST:PORT/"
     }
     stages {
-        stage('Pull Docker Image') {
+        stage('Deploy MongoDB') {
             steps {
-                container('docker') {
+                container('helm') {
                     script {
-                        sh 'docker pull razasraf7/domyduda'
+                        sh '''
+                        # Add the Bitnami repository and update
+                        helm repo add bitnami https://charts.bitnami.com/bitnami
+                        helm repo update
+
+                        # Install MongoDB using the custom values file
+                        helm install my-mongodb bitnami/mongodb -f mongodb-architecture.yaml
+                        '''
                     }
                 }
             }
         }
-        stage('Run Application') {
+        stage('Package and Deploy Application') {
             steps {
-                container('docker') {
+                container('helm') {
                     script {
                         sh '''
-                        docker run -d --name my_app_container \
-                        -e MONGO_URI=$MONGO_URI \
-                        razasraf7/domyduda
+                        # Navigate to the directory containing the Helm chart
+                        cd domyduda
+
+                        # Package the Helm chart
+                        helm package .
+
+                        # Deploy the Helm chart
+                        helm install my-app ./domyduda-0.1.0.tgz --set mongodb.uri=$MONGO_URI
                         '''
                     }
                 }
@@ -53,14 +63,14 @@ pipeline {
         }
         stage('Check Application') {
             steps {
-                container('docker') {
+                container('kubectl') {
                     script {
                         // Replace this with your application's health check or test command
                         sh '''
                         # Wait for a few seconds to ensure the application is up
-                        sleep 10
+                        sleep 30
                         # Check if the application is running correctly
-                        docker exec my_app_container curl -f http://localhost:8000/ || exit 1
+                        kubectl run -i --rm --tty busybox --image=busybox --restart=Never -- curl -f http://my-app.default.svc.cluster.local:8000/ || exit 1
                         '''
                     }
                 }
@@ -69,10 +79,13 @@ pipeline {
     }
     post {
         always {
-            container('docker') {
+            container('helm') {
                 script {
-                    sh 'docker stop my_app_container'
-                    sh 'docker rm my_app_container'
+                    sh '''
+                    # Uninstall the application and MongoDB
+                    helm uninstall my-app
+                    helm uninstall my-mongodb
+                    '''
                 }
             }
         }
