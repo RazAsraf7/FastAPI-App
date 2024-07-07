@@ -2,72 +2,29 @@ pipeline {
     agent {
         kubernetes {
             yaml """
-apiVersion: "v1"
-kind: "Pod"
+apiVersion: v1
+kind: Pod
 metadata:
-  annotations:
-    kubernetes.jenkins.io/last-refresh: "1720282518318"
-    buildUrl: "http://jenkins.jenkins.svc.cluster.local:8080/job/Final%20Project/job/feature/18/"
-    runUrl: "job/Final%20Project/job/feature/18/"
   labels:
     jenkins/jenkins-jenkins-agent: "true"
     jenkins/label-digest: "ee3d95fc3ecb6e9df327abda36df6716d619ddfd"
-    jenkins/label: "Final_Project_feature_18-htk2p"
+    jenkins/label: "Final_Project_feature_21-g4sgs"
     kubernetes.jenkins.io/controller: "http___jenkins_jenkins_svc_cluster_local_8080x"
-  name: "final-project-feature-18-htk2p-f93p6-zqdt3"
+  name: "final-project-feature-21-g4sgs-kpksj-3lbsb"
   namespace: "jenkins"
 spec:
   containers:
-  - command:
-    - "cat"
-    image: "alpine/helm:latest"
-    name: "helm"
-    tty: true
-    volumeMounts:
-    - mountPath: "/home/jenkins/agent"
-      name: "workspace-volume"
-      readOnly: false
-  - command:
-    - "cat"
-    image: "bitnami/kubectl:1.21.3"
-    name: "kubectl"
-    tty: true
-    volumeMounts:
-    - mountPath: "/home/jenkins/agent"
-      name: "workspace-volume"
-      readOnly: false
-  - env:
-    - name: "JENKINS_SECRET"
-      value: "********"
-    - name: "JENKINS_TUNNEL"
-      value: "jenkins-agent.jenkins.svc.cluster.local:50000"
-    - name: "JENKINS_AGENT_NAME"
-      value: "final-project-feature-18-htk2p-f93p6-zqdt3"
-    - name: "REMOTING_OPTS"
-      value: "-noReconnectAfter 1d"
-    - name: "JENKINS_NAME"
-      value: "final-project-feature-18-htk2p-f93p6-zqdt3"
-    - name: "JENKINS_AGENT_WORKDIR"
-      value: "/home/jenkins/agent"
-    - name: "JENKINS_URL"
-      value: "http://jenkins.jenkins.svc.cluster.local:8080/"
-    image: "jenkins/inbound-agent:3248.v65ecb_254c298-2"
-    name: "jnlp"
-    resources:
-      requests:
-        memory: "256Mi"
-        cpu: "100m"
-    volumeMounts:
-    - mountPath: "/home/jenkins/agent"
-      name: "workspace-volume"
-      readOnly: false
-  nodeSelector:
-    kubernetes.io/os: "linux"
-  restartPolicy: "Never"
-  volumes:
-  - emptyDir:
-      medium: ""
-    name: "workspace-volume"
+  - name: jnlp
+    image: jenkins/inbound-agent
+    args: ["-url", "http://jenkins.jenkins.svc.cluster.local:8080", "$(JENKINS_SECRET)", "$(JENKINS_NAME)", "-workDir=/home/jenkins/agent"]
+    env:
+    - name: JENKINS_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: jenkins-agent-secret
+          key: jenkins-agent-secret
+    - name: JENKINS_NAME
+      value: "final-project-feature-21-g4sgs-kpksj-3lbsb"
 """
         }
     }
