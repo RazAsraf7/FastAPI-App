@@ -2,49 +2,52 @@ pipeline {
     agent {
         kubernetes {
             yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    jenkins/jenkins-jenkins-agent: "true"
-    jenkins/label-digest: "ee3d95fc3ecb6e9df327abda36df6716d619ddfd"
-    jenkins/label: "Final_Project_feature_21-g4sgs"
-    kubernetes.jenkins.io/controller: "http___jenkins_jenkins_svc_cluster_local_8080x"
-  name: "final-project-feature-21-g4sgs-kpksj-3lbsb"
-  namespace: "jenkins"
-spec:
-  containers:
-  - name: jnlp
-    image: jenkins/inbound-agent
-    args: ["-url", "http://jenkins.jenkins.svc.cluster.local:8080", "$(JENKINS_SECRET)", "$(JENKINS_NAME)", "-workDir=/home/jenkins/agent"]
-    env:
-    - name: JENKINS_SECRET
-      valueFrom:
-        secretKeyRef:
-          name: jenkins-agent-secret
-          key: jenkins-agent-secret
-    - name: JENKINS_NAME
-      value: "final-project-feature-21-g4sgs-kpksj-3lbsb"
-"""
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: helm
+                image: alpine/helm:3.9.0
+                command:
+                - cat
+                tty: true
+              - name: kubectl
+                image: bitnami/kubectl:1.21.3
+                command:
+                - cat
+                tty: true
+            """
         }
     }
+    environment {
+        USERNAME = 'root'
+        ROOT_PASSWORD = '212928139'
+        HOST = 'mongodb'
+        PORT = '27017'
+        MONGO_URI = "mongodb://$USERNAME:$ROOT_PASSWORD@$HOST:$PORT/"
+    }
     stages {
-        stage('Declarative: Checkout SCM') {
-            steps {
-                checkout scm
-            }
-        }
         stage('Download and Lint MongoDB Chart') {
             steps {
                 container('helm') {
                     script {
-                        sh """
-                            rm -rf mongodb
-                            helm repo add bitnami https://charts.bitnami.com/bitnami
-                            helm repo update
-                            helm pull bitnami/mongodb --untar
-                            helm lint mongodb -f mongodb-architecture.yaml --debug
-                        """
+                        sh '''
+                        # Remove any existing chart directories to avoid conflicts
+                        rm -rf mongodb
+
+                        # Add the Bitnami repository and update
+                        helm repo add bitnami https://charts.bitnami.com/bitnami
+                        helm repo update
+
+                        # Download the MongoDB chart
+                        helm pull bitnami/mongodb --untar
+
+                        # Print the problematic template for inspection
+                        cat mongodb/charts/common/templates/_resources.tpl
+
+                        # Run Helm lint in debug mode for detailed error output
+                        helm lint mongodb -f mongodb-architecture.yaml --debug
+                        '''
                     }
                 }
             }
@@ -53,9 +56,10 @@ spec:
             steps {
                 container('helm') {
                     script {
-                        sh """
-                            helm install my-mongodb ./mongodb -f mongodb-architecture.yaml --set auth.usernames[0]=root,auth.databases[0]=DMD
-                        """
+                        sh '''
+                        # Install MongoDB using the custom values file
+                        helm install my-mongodb ./mongodb -f mongodb-architecture.yaml
+                        '''
                     }
                 }
             }
@@ -64,20 +68,31 @@ spec:
             steps {
                 container('helm') {
                     script {
-                        sh """
-                            # Package and deploy your application
-                        """
+                        sh '''
+                        # Navigate to the directory containing the Helm chart
+                        cd domyduda
+
+                        # Package the Helm chart
+                        helm package .
+
+                        # Deploy the Helm chart
+                        helm install my-app ./domyduda-0.1.0.tgz --set mongodb.uri=$MONGO_URI
+                        '''
                     }
                 }
             }
         }
         stage('Check Application') {
             steps {
-                container('helm') {
+                container('kubectl') {
                     script {
-                        sh """
-                            # Check your application
-                        """
+                        // Replace this with your application's health check or test command
+                        sh '''
+                        # Wait for a few seconds to ensure the application is up
+                        sleep 30
+                        # Check if the application is running correctly
+                        kubectl run -i --rm --tty busybox --image=busybox --restart=Never -- curl -f http://my-app.default.svc.cluster.local:8000/ || exit 1
+                        '''
                     }
                 }
             }
@@ -87,10 +102,11 @@ spec:
         always {
             container('helm') {
                 script {
-                    sh """
-                        helm uninstall my-app || true
-                        helm uninstall my-mongodb || true
-                    """
+                    sh '''
+                    # Uninstall the application and MongoDB
+                    helm uninstall my-app || true
+                    helm uninstall my-mongodb || true
+                    '''
                 }
             }
         }
