@@ -10,12 +10,12 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "domyduda.selectorLabels" . | nindent 6 }}
+      {{- include "domyduda.selectorLabels" . | nindent 8 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml .Values.podAnnotations | nindent 8 }}
       {{- end }}
       labels:
         {{- include "domyduda.labels" . | nindent 8 }}
@@ -35,32 +35,20 @@ spec:
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          env:
-            - name: USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: mongodb-uri
-                  key: username
-            - name: ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mongodb-uri
-                  key: password
-            - name: PORT
-              valueFrom:
-                secretKeyRef:
-                  name: mongodb-uri
-                  key: port
-            - name: HOST
-              valueFrom:
-                secretKeyRef:
-                  name: mongodb-uri
-                  key: host
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: http
+            - name: dmd
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          env:
+            - name: ROOT_USERNAME
+              value: "root"
+            - name: ROOT_PASSWORD
+              value: "212928139"
+            - name: PORT
+              value: "27017"
+            - name: HOST
+              value: "mongodb"
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:

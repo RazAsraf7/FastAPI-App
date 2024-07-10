@@ -12,7 +12,7 @@ import uvicorn
 import re
 
 load_dotenv()
-username = os.getenv("USERNAME")
+username = os.getenv("ROOT_USERNAME")
 password = os.getenv("ROOT_PASSWORD")
 port = os.getenv("PORT")
 host = os.getenv("HOST")

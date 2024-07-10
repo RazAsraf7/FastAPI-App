@@ -6,13 +6,13 @@ replicaCount: 3
 
 image:
   repository: razasraf7/domyduda
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
 imagePullSecrets: []
-nameOverride: "domyduda"
-fullnameOverride: "domyduda"
+nameOverride: ""
+fullnameOverride: ""
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -75,18 +75,10 @@ livenessProbe:
   httpGet:
     path: /
     port: 8000
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 1
-  failureThreshold: 3
 readinessProbe:
   httpGet:
     path: /
     port: 8000
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 1
-  failureThreshold: 3
 
 autoscaling:
   enabled: false
@@ -114,9 +106,12 @@ tolerations: []
 
 affinity: {}
 
-env:
-  secrets:
-    username: cm9vdA==  # Base64 encoded value for 'root'
-    password: MjEyOTI4MTM5  # Base64 encoded value for 'yourpassword'
-    port: MjcwMTc=  # Base64 encoded value for '27017'
-    host: bW9uZ29kYg==  # Base64 encoded value for 'mongodb'
+mongodb:
+  auth:
+    rootPassword: "212928139"
+    username: "root"
+    password: "212928139"
+    database: "DMD"
+  architecture: standalone
+  service:
+    port: 27017
