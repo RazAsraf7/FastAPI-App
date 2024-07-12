@@ -35,6 +35,7 @@ pipeline {
                         cd domyduda
                         # Deploy the Helm chart
                         helm dependency update
+                        cd ..
                         helm install my-app ./domyduda
                         '''
                     }
