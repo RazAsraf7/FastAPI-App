@@ -47,7 +47,7 @@ spec:
                     script {
                         // Start port forwarding in the background
                         sh "kubectl port-forward svc/domyduda 8000:8000 &"
-
+                        
                         // Give port-forward some time to establish
                         sleep 5
 
