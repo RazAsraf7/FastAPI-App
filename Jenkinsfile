@@ -45,22 +45,21 @@ spec:
             steps {
                 container('kubectl') {
                     script {
-                        // Start port forwarding in the background
-                        sh "kubectl port-forward svc/domyduda 8000:8000 &"
-                        
-                        // Give port-forward some time to establish
-                        sleep 5
-
-                        // Check health endpoint
-                        def healthCheckResponse = sh(script: "curl -s http://localhost:8000/health", returnStdout: true).trim()
-                        if (healthCheckResponse == 'OK') {
-                            echo 'Health check passed!'
-                        } else {
-                            error 'Health check failed!'
-                        }
-
-                        // Optionally, you may want to kill the port-forward process after the check
-                        sh "pkill -f 'kubectl port-forward svc/domyduda 8000:8000'"
+                        // Add debug logs
+                        echo "Starting Port Forwarding and Health Check"
+                        sh '''
+                            set -x
+                            POD_NAME=$(kubectl get pods --namespace jenkins -l "app.kubernetes.io/name=domyduda,app.kubernetes.io/instance=my-app" -o jsonpath="{.items[0].metadata.name}")
+                            echo "POD_NAME: $POD_NAME"
+                            CONTAINER_PORT=$(kubectl get pod --namespace jenkins $POD_NAME -o jsonpath="{.spec.containers[0].ports[0].containerPort}")
+                            echo "CONTAINER_PORT: $CONTAINER_PORT"
+                            kubectl --namespace jenkins port-forward $POD_NAME 8000:$CONTAINER_PORT &
+                            PORT_FORWARD_PID=$!
+                            sleep 10
+                            curl -s http://localhost:8000/health || (echo "Health check failed!" && kill $PORT_FORWARD_PID && exit 1)
+                            kill $PORT_FORWARD_PID
+                            echo "Port Forwarding and Health Check completed"
+                        '''
                     }
                 }
             }
