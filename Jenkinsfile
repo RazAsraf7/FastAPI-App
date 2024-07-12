@@ -44,23 +44,24 @@ spec:
         }
         stage('Port Forward and Health Check') {
             steps {
-                script {
-                    // Start port forwarding in the background
-                    sh "kubectl port-forward svc/domyduda 8000:8000 &"
+                container('kubectl') {
+                    script {
+                        // Start port forwarding in the background
+                        sh "kubectl port-forward svc/domyduda 8000:8000 &"
 
-                    // Give port-forward some time to establish
-                    sleep 5
+                        // Give port-forward some time to establish
+                        sleep 5
 
-                    // Check health endpoint
-                    def healthCheckResponse = sh(script: "curl -s http://localhost:8000/health", returnStdout: true).trim()
-                    if (healthCheckResponse == 'OK') {
-                        echo 'Health check passed!'
-                    } else {
-                        error 'Health check failed!'
-                    }
+                        // Check health endpoint
+                        def healthCheckResponse = sh(script: "curl -s http://localhost:8000/health", returnStdout: true).trim()
+                        if (healthCheckResponse == 'OK') {
+                            echo 'Health check passed!'
+                        } else {
+                            error 'Health check failed!'
+                        }
 
-                    // Optionally, you may want to kill the port-forward process after the check
-                    sh "pkill -f 'kubectl port-forward svc/domyduda 8000:8000'"
+                        // Optionally, you may want to kill the port-forward process after the check
+                        sh "pkill -f 'kubectl port-forward svc/domyduda 8000:8000'"
                 }
             }
         }
