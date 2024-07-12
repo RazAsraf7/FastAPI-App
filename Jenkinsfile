@@ -32,6 +32,7 @@ pipeline {
                 container('helm') {
                     script {
                         sh '''
+                        cd domyduda
                         # Deploy the Helm chart
                         helm dependency update
                         helm install my-app ./domyduda
