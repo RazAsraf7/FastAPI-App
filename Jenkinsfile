@@ -2,21 +2,21 @@ pipeline {
     agent {
         kubernetes {
             yaml """
-            apiVersion: v1
-            kind: Pod
-            spec:
-              containers:
-              - name: helm
-                image: alpine/helm:3.9.0
-                command:
-                - cat
-                tty: true
-              - name: kubectl
-                image: bitnami/kubectl:1.21.3
-                command:
-                - cat
-                tty: true
-            """
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: helm
+    image: alpine/helm:3.9.0
+    command:
+    - cat
+    tty: true
+  - name: kubectl
+    image: bitnami/kubectl:1.21.3
+    command:
+    - cat
+    tty: true
+"""
         }
     }
     environment {
