@@ -19,29 +19,28 @@ spec:
 """
         }
     }
-    environment {
-        DOCKER_IMAGE = "razasraf7/domyduda"
-        GITHUB_REPO = "RazAsraf7/FastAPI-App"
-        GITHUB_TOKEN = credentials('github_credentials')
-        GITHUB_API_URL = "https://api.github.com"
-        DOCKERHUB_CREDENTIALS = credentials('docker_credentials')
-    }
+
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Package and Deploy Application') {
             steps {
                 container('helm') {
                     script {
-                        sh '''
-                        cd domyduda
-                        # Deploy the Helm chart
-                        helm dependency update
-                        cd ..
-                        helm install my-app ./domyduda
-                        '''
+                        def chartDir = "/home/jenkins/agent/workspace/Final_Project_new_chart/domyduda"
+                        dir(chartDir) {
+                            sh 'helm dependency update'
+                            sh 'helm install my-app .'
+                        }
                     }
                 }
             }
         }
+
         stage('Port Forward and Health Check') {
             steps {
                 container('kubectl') {
@@ -62,18 +61,18 @@ spec:
 
                         // Optionally, you may want to kill the port-forward process after the check
                         sh "pkill -f 'kubectl port-forward svc/domyduda 8000:8000'"
+                    }
                 }
             }
         }
     }
+
     post {
         always {
             container('helm') {
                 script {
-                    sh '''
-                    # Uninstall the application and MongoDB
-                    helm uninstall my-app || true
-                    '''
+                    // Clean up the Helm release
+                    sh 'helm uninstall my-app || true'
                 }
             }
         }
