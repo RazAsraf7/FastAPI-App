@@ -20,80 +20,45 @@ pipeline {
         }
     }
     environment {
-        USERNAME = 'root'
-        ROOT_PASSWORD = '212928139'
-        HOST = 'mongodb'
-        PORT = '27017'
-        MONGO_URI = "mongodb://$USERNAME:$ROOT_PASSWORD@$HOST:$PORT/"
+        DOCKER_IMAGE = "razasraf7/domyduda"
+        GITHUB_REPO = "RazAsraf7/FastAPI-App"
+        GITHUB_TOKEN = credentials('github_credentials')
+        GITHUB_API_URL = "https://api.github.com"
+        DOCKERHUB_CREDENTIALS = credentials('docker_credentials')
     }
     stages {
-        stage('Download and Lint MongoDB Chart') {
-            steps {
-                container('helm') {
-                    script {
-                        sh '''
-                        # Remove any existing chart directories to avoid conflicts
-                        rm -rf mongodb
-
-                        # Add the Bitnami repository and update
-                        helm repo add bitnami https://charts.bitnami.com/bitnami
-                        helm repo update
-
-                        # Download the MongoDB chart
-                        helm pull bitnami/mongodb --untar
-
-                        # Print the problematic template for inspection
-                        cat mongodb/charts/common/templates/_resources.tpl
-
-                        # Run Helm lint in debug mode for detailed error output
-                        helm lint mongodb -f mongodb-architecture.yaml --debug
-                        '''
-                    }
-                }
-            }
-        }
-        stage('Deploy MongoDB') {
-            steps {
-                container('helm') {
-                    script {
-                        sh '''
-                        # Install MongoDB using the custom values file
-                        helm install my-mongodb ./mongodb -f mongodb-architecture.yaml
-                        '''
-                    }
-                }
-            }
-        }
         stage('Package and Deploy Application') {
             steps {
                 container('helm') {
                     script {
                         sh '''
-                        # Navigate to the directory containing the Helm chart
-                        cd domyduda
-
-                        # Package the Helm chart
-                        helm package .
-
                         # Deploy the Helm chart
-                        helm install my-app ./domyduda-0.1.0.tgz --set mongodb.uri=$MONGO_URI
+                        helm dependency update
+                        helm install my-app ./domyduda
                         '''
                     }
                 }
             }
         }
-        stage('Check Application') {
+        stage('Port Forward and Health Check') {
             steps {
-                container('kubectl') {
-                    script {
-                        // Replace this with your application's health check or test command
-                        sh '''
-                        # Wait for a few seconds to ensure the application is up
-                        sleep 30
-                        # Check if the application is running correctly
-                        kubectl run -i --rm --tty busybox --image=busybox --restart=Never -- curl -f http://my-app.default.svc.cluster.local:8000/ || exit 1
-                        '''
+                script {
+                    // Start port forwarding in the background
+                    sh "kubectl port-forward svc/domyduda 8000:8000 &"
+
+                    // Give port-forward some time to establish
+                    sleep 5
+
+                    // Check health endpoint
+                    def healthCheckResponse = sh(script: "curl -s http://localhost:8000/health", returnStdout: true).trim()
+                    if (healthCheckResponse == 'OK') {
+                        echo 'Health check passed!'
+                    } else {
+                        error 'Health check failed!'
                     }
+
+                    // Optionally, you may want to kill the port-forward process after the check
+                    sh "pkill -f 'kubectl port-forward svc/domyduda 8000:8000'"
                 }
             }
         }
@@ -105,7 +70,6 @@ pipeline {
                     sh '''
                     # Uninstall the application and MongoDB
                     helm uninstall my-app || true
-                    helm uninstall my-mongodb || true
                     '''
                 }
             }
