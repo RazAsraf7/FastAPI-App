@@ -27,22 +27,10 @@ spec:
             """
         }
     }
-    environment {
-        GIT_CREDENTIALS_ID = 'github_credentials' // Replace with your actual credentials ID
-    }
     stages {
         stage('Checkout SCM') {
             steps {
-                script {
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/main']],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/RazAsraf7/FastAPI-App',
-                            credentialsId: env.GIT_CREDENTIALS_ID
-                        ]]
-                    ])
-                }
+                checkout scm
             }
         }
         stage('Helm Lint') {
@@ -63,16 +51,6 @@ spec:
             steps {
                 container('kubectl') {
                     sh 'helm upgrade --install domyduda ./domyduda'
-                }
-            }
-        }
-    }
-    post {
-        always {
-            container('kubectl') {
-                script {
-                    // Clean up resources
-                    sh 'helm uninstall domyduda || true'
                 }
             }
         }
