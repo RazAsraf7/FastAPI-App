@@ -37,7 +37,7 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: dmd
+            - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           env:
@@ -48,7 +48,7 @@ spec:
             - name: PORT
               value: "27017"
             - name: HOST
-              value: "mongodb"
+              value: "domyduda-mongodb"
           livenessProbe:
             {{- toYaml .Values.livenessProbe | nindent 12 }}
           readinessProbe:

@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request, Form, Cookie
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pymongo import MongoClient
+from hashlib import md5
 import os
 from dotenv import load_dotenv
 from pymongo import MongoClient, errors
@@ -212,7 +213,7 @@ async def register(
             "region": region,
             "username": User_Name,
             "email": Email,
-            "password": str(hash(Password)),
+            "password": str(md5(Password.encode()).hexdigest()),
             "full_name": f'{First_Name} {Last_Name}'
         }
 
@@ -252,7 +253,7 @@ async def login(request: Request, User_Name: str = Form(...), Password: str = Fo
         return RedirectResponse(url='/ADMIN', status_code=303)
     try:
         # Validate user credentials
-        user = users_collection.find_one({"username": User_Name, "password": str(hash(Password))})
+        user = users_collection.find_one({"username": User_Name, "password": str(md5(Password.encode()).hexdigest())})
         if not user:
             context = {'request': request, 'error': 'Invalid username or password'}
             return templates.TemplateResponse('login.html', context)
