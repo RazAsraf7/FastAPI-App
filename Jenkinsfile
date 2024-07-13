@@ -1,7 +1,7 @@
 pipeline{
     agent{
         kubernetes{
-            defaultContainer 'razasraf7/helm_and_kubectl:latest'
+            defaultContainer 'razasraf7/helm_and_kubectl'
         }
     }
 
@@ -19,12 +19,13 @@ pipeline{
             }
         }
 
-        stage("Build Helm Chart"){
-            steps {
-                sh """cd domyduda
-                    helm dependency update
-                    cd ..
-                    helm upgrade --install domyduda domyduda"""
+        stage("Build Helm Chart") {
+            steps { 
+                sh """
+            cd domyduda
+            helm dependency update
+            helm upgrade --install domyduda domyduda
+        """
             }
         }
 
