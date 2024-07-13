@@ -1,57 +1,26 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: "final-project-new-chart"
-  namespace: "jenkins"
+  name: build-pod
 spec:
   containers:
-  - name: "ez-docker-helm-build"
-    image: "ezezeasy/ez-docker-helm-build:1.41"
-    imagePullPolicy: "Always"
-    securityContext:
-      privileged: true
-    volumeMounts:
-    - mountPath: "/home/jenkins/agent"
-      name: "workspace-volume"
-      readOnly: false
+  - name: ez-docker-helm-build
+    image: ezezeasy/ez-docker-helm-build:1.41
     command:
-    - /bin/sh
-    - -c
-    - |
-      apk add --no-cache curl
-      apk add --no-cache bash
-      curl -LO "https://dl.k8s.io/release/v1.27.4/bin/linux/amd64/kubectl"
-      chmod +x ./kubectl
-      mv ./kubectl /usr/local/bin/kubectl
-  - name: "jnlp"
-    image: "jenkins/inbound-agent:3248.v65ecb_254c298-2"
-    env:
-    - name: "JENKINS_SECRET"
-      value: "********"
-    - name: "JENKINS_TUNNEL"
-      value: "jenkins-agent.jenkins.svc.cluster.local:50000"
-    - name: "JENKINS_AGENT_NAME"
-      value: "final-project-new-chart"
-    - name: "REMOTING_OPTS"
-      value: "-noReconnectAfter 1d"
-    - name: "JENKINS_NAME"
-      value: "final-project-new-chart"
-    - name: "JENKINS_AGENT_WORKDIR"
-      value: "/home/jenkins/agent"
-    - name: "JENKINS_URL"
-      value: "http://jenkins.jenkins.svc.cluster.local:8080/"
-    resources:
-      requests:
-        memory: "256Mi"
-        cpu: "100m"
+      - cat
+    tty: true
     volumeMounts:
-    - mountPath: "/home/jenkins/agent"
-      name: "workspace-volume"
-      readOnly: false
-  nodeSelector:
-    kubernetes.io/os: "linux"
-  restartPolicy: "Never"
+      - mountPath: /home/jenkins/agent
+        name: workspace-volume
+        readOnly: false
+    # Add kubectl installation here
+    initContainers:
+    - name: install-kubectl
+      image: alpine:3.18
+      command: ['sh', '-c', 'apk add --no-cache curl && curl -LO "https://dl.k8s.io/release/v1.28.0/bin/linux/amd64/kubectl" && chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl']
+      volumeMounts:
+      - name: workspace-volume
+        mountPath: /usr/local/bin
   volumes:
-  - emptyDir:
-      medium: ""
-    name: "workspace-volume"
+  - name: workspace-volume
+    emptyDir: {}
