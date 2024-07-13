@@ -1,0 +1,20 @@
+# Use an Alpine-based image
+FROM alpine:3.14
+
+# Install necessary tools (curl, openssl, bash, and kubectl)
+RUN apk add --no-cache curl openssl bash && \
+    curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    chmod +x ./kubectl && \
+    mv ./kubectl /usr/local/bin/kubectl
+
+# Install Helm
+RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 && \
+    chmod +x get_helm.sh && \
+    ./get_helm.sh
+
+# Set your working directory and other necessary steps
+WORKDIR /usr/src/app
+# ... (other instructions)
+
+# Build your image
+# docker build -f Dockerfile1 -t razasraf7/helm_and_kubectl .
