@@ -31,113 +31,68 @@ spec:
     args: '${computer.jnlpmac} ${computer.name}'
             """
         }
-    }
-    environment {
-        RELEASE_NAME = 'domyduda'
-        CHART_NAME = 'domyduda'
+    environment{
         DOCKER_IMAGE = 'razasraf7/domyduda'
-        NAMESPACE = 'default'
-        HELM_VALUES = 'values.yaml' // Use if you have a values file
-        BRANCH_NAME = env.BRANCH_NAME
+        GITHUB_API_URL = 'https://api.github.com'
+        GITHUB_REPO = 'RazAsraf7/FastAPI-App'
+        GITHUB_TOKEN = credentials('github-credentials')
     }
-    stages {
-        stage('Checkout SCM') {
+
+    stages{
+        stage("Checkout code"){
             steps {
                 checkout scm
             }
         }
-        stage('Helm Lint') {
+
+        stage("Install dependencies"){
             steps {
-                container('helm') {
-                    sh 'helm lint $CHART_NAME'
-                }
+                sh 'helm upgrade --install domyduda domyduda'
             }
         }
-        stage('Helm Dependencies Update') {
-            steps {
-                container('helm') {
-                    sh 'helm dependency update $CHART_NAME'
-                }
-            }
-        }
-        stage('Helm Install/Upgrade') {
-            steps {
-                container('helm') {
-                    sh '''
-                        helm upgrade --install $RELEASE_NAME ./$CHART_NAME \
-                        --set image.repository=$DOCKER_IMAGE \
-                        --namespace $NAMESPACE
-                    '''
-                }
-            }
-        }
-        stage('Wait for Pods') {
-            steps {
-                container('kubectl') {
-                    sh 'kubectl rollout status deployment/$RELEASE_NAME --namespace $NAMESPACE'
-                }
-            }
-        }
-        stage('Port Forward and Health Check') {
-            steps {
-                container('kubectl') {
-                    script {
-                        sh '''
-                            kubectl port-forward svc/$RELEASE_NAME 8000:8000 --namespace $NAMESPACE &
-                            sleep 10
-                        '''
-                        def response = sh(script: "curl -s http://localhost:8000/health", returnStdout: true).trim()
-                        if (response == 'OK') {
-                            echo 'Health check passed.'
-                        } else {
-                            error('Health check failed.')
-                        }
-                    }
-                }
-            }
-        }
-        stage('Conditional Actions') {
+        stage("Build docker image"){
             steps {
                 script {
-                    if (BRANCH_NAME != 'main') {
-                        // Create merge request to main
-                        echo 'Creating merge request to main'
-                        sh '''
+                    dockerImage = docker.build("${DOCKER_IMAGE}:latest", "--no-cache .")
+                }
+            }
+        }
+
+        stage('Push Docker image') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker_credentials') {
+                        dockerImage.push("latest")
+                    }
+                }
+            }
+        }
+
+        stage('Create merge request'){
+            when {
+                not {
+                    branch 'main'
+                }
+            }
+            steps {
+                withCredentials([string(credentialsId: 'github-creds', variable: 'GITHUB_TOKEN')]) {
+                    script {
+                        def branchName = env.BRANCH_NAME
+                        def pullRequestTitle = "Merge ${branchName} into main"
+                        def pullRequestBody = "Automatically generated merge request for branch ${branchName}"
+
+                        sh """
                             curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-                            -d '{"title":"Merge branch '${BRANCH_NAME}' into main","head":"'${BRANCH_NAME}'","base":"main"}' \
-                            https://api.github.com/repos/${GITHUB_REPO}/pulls
-                        '''
-                    } else {
-                        // Push to Docker Hub
-                        container('docker') {
-                            withCredentials([usernamePassword(credentialsId: 'docker_credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                                sh '''
-                                    docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-                                    docker build -t $DOCKER_IMAGE .
-                                    docker push $DOCKER_IMAGE
-                                '''
-                            }
-                        }
+                            -d '{ "title": "${pullRequestTitle}", "body": "${pullRequestBody}", "head": "${branchName}", "base": "main" }' \
+                            ${GITHUB_API_URL}/repos/${GITHUB_REPO}/pulls
+                        """
                     }
                 }
             }
         }
     }
-    post {
-        always {
-            cleanWs()
-        }
-        success {
-            script {
-                if (BRANCH_NAME != 'main') {
-                    echo 'Merge request created successfully.'
-                } else {
-                    echo 'Docker image pushed successfully.'
-                }
-            }
-        }
-        failure {
-            echo 'Pipeline failed.'
-        }
-    }
+}
 }
