@@ -31,54 +31,86 @@ spec:
     args: '${computer.jnlpmac} ${computer.name}'
             """
         }
-    environment{
+    }
+    environment {
         DOCKER_IMAGE = 'razasraf7/domyduda'
         GITHUB_API_URL = 'https://api.github.com'
         GITHUB_REPO = 'RazAsraf7/FastAPI-App'
         GITHUB_TOKEN = credentials('github-credentials')
     }
-
-    stages{
-        stage("Checkout code"){
+    stages {
+        stage("Checkout Code") {
             steps {
                 checkout scm
             }
         }
 
-        stage("Install dependencies"){
+        stage("Install Dependencies") {
             steps {
-                sh 'helm upgrade --install domyduda domyduda'
-            }
-        }
-        stage("Build docker image"){
-            steps {
-                script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}:latest", "--no-cache .")
+                container('helm') {
+                    sh 'helm upgrade --install domyduda ./domyduda --namespace default'
                 }
             }
         }
 
-        stage('Push Docker image') {
-            when {
-                branch 'main'
-            }
+        stage("Build Docker Image") {
             steps {
                 script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker_credentials') {
-                        dockerImage.push("latest")
+                    container('docker') {
+                        dockerImage = docker.build("${DOCKER_IMAGE}:latest", "--no-cache .")
                     }
                 }
             }
         }
 
-        stage('Create merge request'){
+        stage('Wait for Pods and Health Check') {
+            steps {
+                container('kubectl') {
+                    script {
+                        // Wait for the deployment to complete
+                        sh 'kubectl rollout status deployment/domyduda --namespace default'
+
+                        // Port forward the service to localhost
+                        sh '''
+                            kubectl port-forward svc/domyduda 8000:8000 --namespace default &
+                            sleep 10
+                        '''
+
+                        // Check the application's health
+                        def response = sh(script: "curl -s http://localhost:8000/health", returnStdout: true).trim()
+                        if (response == 'OK') {
+                            echo 'Health check passed.'
+                        } else {
+                            error('Health check failed.')
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Push Docker Image') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    container('docker') {
+                        docker.withRegistry('https://registry.hub.docker.com', 'docker_credentials') {
+                            dockerImage.push("latest")
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Create Merge Request') {
             when {
                 not {
                     branch 'main'
                 }
             }
             steps {
-                withCredentials([string(credentialsId: 'github-creds', variable: 'GITHUB_TOKEN')]) {
+                withCredentials([string(credentialsId: 'github-credentials', variable: 'GITHUB_TOKEN')]) {
                     script {
                         def branchName = env.BRANCH_NAME
                         def pullRequestTitle = "Merge ${branchName} into main"
@@ -94,5 +126,21 @@ spec:
             }
         }
     }
-}
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            script {
+                if (env.BRANCH_NAME != 'main') {
+                    echo 'Merge request created successfully.'
+                } else {
+                    echo 'Docker image pushed successfully.'
+                }
+            }
+        }
+        failure {
+            echo 'Pipeline failed.'
+        }
+    }
 }
