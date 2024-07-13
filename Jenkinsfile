@@ -1,48 +1,58 @@
-pipeline{
-    agent{
-        kubernetes{
-            defaultContainer 'razasraf7/helm_and_kubectl'
-            podTemplate(
-    containers: [
-        containerTemplate(
-            name: 'helm_and_kubectl',
-            image: 'razasraf7/helm_and_kubectl',
-            command: 'cat',
-            ttyEnabled: true,
-            resourceRequestMemory: '512Mi',
-            resourceRequestCpu: '500m',
-            resourceLimitMemory: '1Gi',
-            resourceLimitCpu: '1',
-            envVars: [
-                [key: 'KUBECONFIG', value: '/home/jenkins/.kube/config']
-            ]
-        ),
-        containerTemplate(
-            name: 'jnlp',
-            image: 'jenkins/inbound-agent:latest',
-            args: '${computer.jnlpmac} ${computer.name}',
-            resourceRequestMemory: '256Mi',
-            resourceRequestCpu: '100m',
-            resourceLimitMemory: '512Mi',
-            resourceLimitCpu: '500m'
-        )
-    ],
-    volumes: [
-        emptyDirVolume(mountPath: '/home/jenkins/agent', name: 'workspace-volume')
-    ]
-)
+pipeline {
+    agent {
+        kubernetes {
+            defaultContainer 'helm_and_kubectl'
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+    - name: helm_and_kubectl
+      image: razasraf7/helm_and_kubectl
+      command:
+        - cat
+      tty: true
+      resources:
+        requests:
+          memory: '512Mi'
+          cpu: '500m'
+        limits:
+          memory: '1Gi'
+          cpu: '1'
+      env:
+        - name: KUBECONFIG
+          value: /home/jenkins/.kube/config
+    - name: jnlp
+      image: jenkins/inbound-agent:latest
+      args: '${computer.jnlpmac} ${computer.name}'
+      resources:
+        requests:
+          memory: '256Mi'
+          cpu: '100m'
+        limits:
+          memory: '512Mi'
+          cpu: '500m'
+  volumes:
+    - name: workspace-volume
+      emptyDir: {}
+  volumeMounts:
+    - name: workspace-volume
+      mountPath: /home/jenkins/agent
+"""
         }
     }
 
-    environment{
+    environment {
         DOCKER_IMAGE = 'razasraf7/domyduda'
         GITHUB_API_URL = 'https://api.github.com'
         GITHUB_REPO = 'RazAsraf7/FastAPI-App'
         GITHUB_TOKEN = credentials('github_credentials')
     }
 
-    stages{
-        stage("Checkout code"){
+    stages {
+        stage("Checkout code") {
             steps {
                 checkout scm
             }
@@ -58,13 +68,14 @@ pipeline{
             }
         }
 
-        stage("Check if Application Works"){
+        stage("Check if Application Works") {
             steps {
-                sh """kubectl port-forward svc/domyduda 8000:8000 && sleep 5
+                sh """kubectl port-forward svc/domyduda 8000:8000 & sleep 5
                 curl -s http://localhost:8000/health"""
             }
         }
-        stage("Build docker image"){
+
+        stage("Build docker image") {
             steps {
                 script {
                     dockerImage = docker.build("${DOCKER_IMAGE}:latest", "--no-cache .")
@@ -85,7 +96,7 @@ pipeline{
             }
         }
 
-        stage('Create merge request'){
+        stage('Create merge request') {
             when {
                 not {
                     branch 'main'
