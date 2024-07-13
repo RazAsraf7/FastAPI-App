@@ -22,17 +22,17 @@ pipeline{
 
         stage("Build Helm Chart"){
             steps {
-                sh "cd domyduda
+                sh """cd domyduda
                     helm dependency update
                     cd ..
-                    helm upgrade --install domyduda domyduda"
+                    helm upgrade --install domyduda domyduda"""
             }
         }
 
         stage("Check if Application Works"){
             steps {
-                sh "kubectl port-forward svc/domyduda 8000:8000 && sleep 5
-                curl -s http://localhost:8000/health"
+                sh """kubectl port-forward svc/domyduda 8000:8000 && sleep 5
+                curl -s http://localhost:8000/health"""
             }
         }
         stage("Build docker image"){
