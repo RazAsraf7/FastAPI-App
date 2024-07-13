@@ -24,16 +24,6 @@ spec:
       env:
         - name: KUBECONFIG
           value: /home/jenkins/.kube/config
-    - name: jnlp
-      image: jenkins/inbound-agent:latest
-      args: '${computer.jnlpmac} ${computer.name}'
-      resources:
-        requests:
-          memory: '256Mi'
-          cpu: '100m'
-        limits:
-          memory: '512Mi'
-          cpu: '500m'
   volumes:
     - name: workspace-volume
       emptyDir: {}
