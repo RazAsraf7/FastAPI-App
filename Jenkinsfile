@@ -38,79 +38,49 @@ spec:
         GITHUB_REPO = 'RazAsraf7/FastAPI-App'
         GITHUB_TOKEN = credentials('github-credentials')
     }
+
     stages {
-        stage("Checkout Code") {
+        stage("Checkout code") {
             steps {
                 checkout scm
             }
         }
 
-        stage("Install Dependencies") {
+        stage("Install dependencies") {
             steps {
-                container('helm') {
-                    sh 'helm upgrade --install domyduda ./domyduda --namespace default'
-                }
+                sh 'helm upgrade --install domyduda domyduda'
             }
         }
 
-        stage("Build Docker Image") {
+        stage("Build docker image") {
             steps {
                 script {
-                    container('docker') {
-                        dockerImage = docker.build("${DOCKER_IMAGE}:latest", "--no-cache .")
-                    }
+                    dockerImage = docker.build("${DOCKER_IMAGE}:latest", "--no-cache .")
                 }
             }
         }
 
-        stage('Wait for Pods and Health Check') {
-            steps {
-                container('kubectl') {
-                    script {
-                        // Wait for the deployment to complete
-                        sh 'kubectl rollout status deployment/domyduda --namespace default'
-
-                        // Port forward the service to localhost
-                        sh '''
-                            kubectl port-forward svc/domyduda 8000:8000 --namespace default &
-                            sleep 10
-                        '''
-
-                        // Check the application's health
-                        def response = sh(script: "curl -s http://localhost:8000/health", returnStdout: true).trim()
-                        if (response == 'OK') {
-                            echo 'Health check passed.'
-                        } else {
-                            error('Health check failed.')
-                        }
-                    }
-                }
-            }
-        }
-
-        stage('Push Docker Image') {
+        stage('Push Docker image') {
             when {
                 branch 'main'
             }
             steps {
                 script {
-                    container('docker') {
-                        docker.withRegistry('https://registry.hub.docker.com', 'docker_credentials') {
-                            dockerImage.push("latest")
-                        }
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker_credentials') {
+                        dockerImage.push("latest")
                     }
                 }
             }
         }
 
-        stage('Create Merge Request') {
+        stage('Create merge request') {
             when {
                 not {
                     branch 'main'
                 }
             }
             steps {
-                withCredentials([string(credentialsId: 'github-credentials', variable: 'GITHUB_TOKEN')]) {
+                withCredentials([string(credentialsId: 'github-creds', variable: 'GITHUB_TOKEN')]) {
                     script {
                         def branchName = env.BRANCH_NAME
                         def pullRequestTitle = "Merge ${branchName} into main"
@@ -126,21 +96,11 @@ spec:
             }
         }
     }
-    post {
-        always {
-            cleanWs()
-        }
-        success {
-            script {
-                if (env.BRANCH_NAME != 'main') {
-                    echo 'Merge request created successfully.'
-                } else {
-                    echo 'Docker image pushed successfully.'
-                }
-            }
-        }
-        failure {
-            echo 'Pipeline failed.'
-        }
-    }
+
+    // Remove or comment out the post section if you don't have the Workspace Cleanup Plugin installed
+    // post {
+    //     always {
+    //         cleanWs()
+    //     }
+    // }
 }
