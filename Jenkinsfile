@@ -86,12 +86,14 @@ spec:
     }
     post {
         always {
-            container('kubectl') {
-                script {
-                    sh 'helm uninstall $RELEASE_NAME'
+            node {
+                container('kubectl') {
+                    script {
+                        sh 'kubectl delete pod $(kubectl get pods --selector=job-name=$JOB_NAME --output=jsonpath={.items..metadata.name}) || true'
+                    }
                 }
+                cleanWs()
             }
-            cleanWs()
         }
     }
 }
