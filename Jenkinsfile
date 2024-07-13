@@ -1,110 +1,71 @@
 pipeline {
     agent {
         kubernetes {
-            defaultContainer 'helm-kubectl'
             yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-  name: my-pod
-spec:
-  containers:
-    - name: helm-kubectl
-      image: razasraf7/helm_and_kubectl
-      command:
-        - cat
-      tty: true
-      resources:
-        requests:
-          memory: '512Mi'
-          cpu: '500m'
-        limits:
-          memory: '1Gi'
-          cpu: '1'
-      env:
-        - name: KUBECONFIG
-          value: /home/jenkins/.kube/config
-  volumes:
-    - name: workspace-volume
-      emptyDir: {}
-  volumeMounts:
-    - name: workspace-volume
-      mountPath: /home/jenkins/agent
-"""
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: helm-kubectl
+                image: razasraf7/helm_and_kubectl
+                command:
+                - cat
+                tty: true
+                volumeMounts:
+                - name: docker-socket
+                  mountPath: /var/run/docker.sock
+              - name: docker
+                image: docker:19.03.12
+                command:
+                - cat
+                tty: true
+                volumeMounts:
+                - name: docker-socket
+                  mountPath: /var/run/docker.sock
+              volumes:
+              - name: docker-socket
+                hostPath:
+                  path: /var/run/docker.sock
+            """
         }
     }
-
-    environment {
-        DOCKER_IMAGE = 'razasraf7/domyduda'
-        GITHUB_API_URL = 'https://api.github.com'
-        GITHUB_REPO = 'RazAsraf7/FastAPI-App'
-        GITHUB_TOKEN = credentials('github_credentials')
-    }
-
     stages {
-        stage("Checkout code") {
+        stage('Build Helm Chart') {
             steps {
-                checkout scm
-            }
-        }
-
-        stage("Build Helm Chart") {
-            steps {
-                sh """
+                container('helm-kubectl') {
+                    sh '''
                     cd domyduda
                     helm dependency update
                     cd ..
                     helm upgrade --install domyduda ./domyduda
-                """
-            }
-        }
-
-        stage("Check if Application Works") {
-            steps {
-                sh """kubectl port-forward svc/domyduda 8000:8000 & sleep 5
-                curl -s http://localhost:8000/health"""
-            }
-        }
-
-        stage("Build Docker Image") {
-            steps {
-                script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}:latest", "--no-cache .")
+                    '''
                 }
             }
         }
-
+        stage('Check if Application Works') {
+            steps {
+                container('helm-kubectl') {
+                    sh '''
+                    sleep 5
+                    kubectl port-forward svc/domyduda 8000:8000 &
+                    sleep 5
+                    curl -s http://localhost:8000/health
+                    '''
+                }
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                container('docker') {
+                    sh 'docker build -t razasraf7/domyduda:latest --no-cache .'
+                }
+            }
+        }
         stage('Push Docker Image') {
-            when {
-                branch 'main'
-            }
             steps {
-                script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker_credentials') {
-                        dockerImage.push("latest")
-                    }
-                }
-            }
-        }
-
-        stage('Create Merge Request') {
-            when {
-                not {
-                    branch 'main'
-                }
-            }
-            steps {
-                withCredentials([string(credentialsId: 'github_credentials', variable: 'GITHUB_TOKEN')]) {
-                    script {
-                        def branchName = env.BRANCH_NAME
-                        def pullRequestTitle = "Merge ${branchName} into main"
-                        def pullRequestBody = "Automatically generated merge request for branch ${branchName}"
-
-                        sh """
-                            curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
-                            -d '{ "title": "${pullRequestTitle}", "body": "${pullRequestBody}", "head": "${branchName}", "base": "main" }' \
-                            ${GITHUB_API_URL}/repos/${GITHUB_REPO}/pulls
-                        """
+                container('docker') {
+                    withDockerRegistry([credentialsId: 'dockerhub_credentials', url: 'https://index.docker.io/v1/']) {
+                        sh 'docker push razasraf7/domyduda:latest'
                     }
                 }
             }
