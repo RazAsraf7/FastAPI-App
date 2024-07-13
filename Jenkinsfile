@@ -29,6 +29,10 @@ pipeline {
             """
         }
     }
+    environment {
+        GITHUB_API_URL = 'https://api.github.com'
+        GITHUB_REPO = 'RazAsraf7/FastAPI-App'
+    }
     stages {
         stage('Build Helm Chart') {
             steps {
@@ -57,15 +61,44 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 container('docker') {
-                    sh 'docker build -t razasraf7/domyduda:latest --no-cache .'
+                    script {
+                        def dockerImage = docker.build("razasraf7/domyduda:latest", "--no-cache .")
+                    }
                 }
             }
         }
         stage('Push Docker Image') {
+            when {
+                branch 'main'
+            }
             steps {
                 container('docker') {
-                    withDockerRegistry([credentialsId: 'docker_credentials', url: 'https://index.docker.io/v1/']) {
-                        sh 'docker push razasraf7/domyduda:latest'
+                    script {
+                        docker.withRegistry('https://registry.hub.docker.com', 'docker_credentials') {
+                            dockerImage.push("latest")
+                        }
+                    }
+                }
+            }
+        }
+        stage('Create Merge Request') {
+            when {
+                not {
+                    branch 'main'
+                }
+            }
+            steps {
+                withCredentials([string(credentialsId: 'github-creds', variable: 'GITHUB_TOKEN')]) {
+                    script {
+                        def branchName = env.BRANCH_NAME
+                        def pullRequestTitle = "Merge ${branchName} into main"
+                        def pullRequestBody = "Automatically generated merge request for branch ${branchName}"
+
+                        sh """
+                            curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
+                            -d '{ "title": "${pullRequestTitle}", "body": "${pullRequestBody}", "head": "${branchName}", "base": "main" }' \
+                            ${GITHUB_API_URL}/repos/${GITHUB_REPO}/pulls
+                        """
                     }
                 }
             }
