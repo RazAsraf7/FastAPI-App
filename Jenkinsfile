@@ -53,7 +53,7 @@ spec:
                 sh """
                     cd domyduda
                     helm dependency update
-                    helm upgrade --install domyduda domyduda
+                    helm upgrade --install domyduda ./domyduda
                 """
             }
         }
