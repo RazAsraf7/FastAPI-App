@@ -1,7 +1,7 @@
 pipeline {
     agent {
         kubernetes {
-            defaultContainer 'helm_and_kubectl'
+            defaultContainer 'helm-kubectl'
             yaml """
 apiVersion: v1
 kind: Pod
@@ -9,7 +9,7 @@ metadata:
   name: my-pod
 spec:
   containers:
-    - name: helm_and_kubectl
+    - name: helm-kubectl
       image: razasraf7/helm_and_kubectl
       command:
         - cat
