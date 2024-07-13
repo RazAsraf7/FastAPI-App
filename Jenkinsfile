@@ -86,7 +86,7 @@ spec:
     }
     post {
         always {
-            node {
+            node('jenkins-agent') {
                 container('kubectl') {
                     sh 'kubectl delete pod $(kubectl get pods --selector=job-name=$JOB_NAME --output=jsonpath={.items..metadata.name}) || true'
                 }
