@@ -64,7 +64,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 container('docker') {
-                    withDockerRegistry([credentialsId: 'dockerhub_credentials', url: 'https://index.docker.io/v1/']) {
+                    withDockerRegistry([credentialsId: 'docker_credentials', url: 'https://index.docker.io/v1/']) {
                         sh 'docker push razasraf7/domyduda:latest'
                     }
                 }
