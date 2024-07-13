@@ -2,34 +2,36 @@ pipeline {
     agent {
         kubernetes {
             defaultContainer 'helm_and_kubectl'
-            containerTemplate {
-                name 'helm_and_kubectl'
-                image 'razasraf7/helm_and_kubectl'
-                command 'cat'
-                ttyEnabled true
-                resourceRequestMemory '512Mi'
-                resourceRequestCpu '500m'
-                resourceLimitMemory '1Gi'
-                resourceLimitCpu '1'
-                envVars {
-                    envVar(key: 'KUBECONFIG', value: '/home/jenkins/.kube/config')
+            containerTemplates {
+                containerTemplate {
+                    name 'helm_and_kubectl'
+                    image 'razasraf7/helm_and_kubectl'
+                    command 'cat'
+                    ttyEnabled true
+                    resourceRequestMemory '512Mi'
+                    resourceRequestCpu '500m'
+                    resourceLimitMemory '1Gi'
+                    resourceLimitCpu '1'
+                    envVars {
+                        envVar(key: 'KUBECONFIG', value: '/home/jenkins/.kube/config')
+                    }
+                }
+                containerTemplate {
+                    name 'jnlp'
+                    image 'jenkins/inbound-agent:latest'
+                    args '${computer.jnlpmac} ${computer.name}'
+                    resourceRequestMemory '256Mi'
+                    resourceRequestCpu '100m'
+                    resourceLimitMemory '512Mi'
+                    resourceLimitCpu '500m'
                 }
             }
-            containerTemplate {
-                name 'jnlp'
-                image 'jenkins/inbound-agent:latest'
-                args '${computer.jnlpmac} ${computer.name}'
-                resourceRequestMemory '256Mi'
-                resourceRequestCpu '100m'
-                resourceLimitMemory '512Mi'
-                resourceLimitCpu '500m'
+            volumes {
+                emptyDirVolume(mountPath: '/home/jenkins/agent', name: 'workspace-volume')
             }
             volumeMounts {
                 mountPath '/home/jenkins/agent'
                 name 'workspace-volume'
-            }
-            volumes {
-                emptyDirVolume(mountPath: '/home/jenkins/agent', name: 'workspace-volume')
             }
         }
     }
@@ -49,12 +51,12 @@ pipeline {
         }
 
         stage("Build Helm Chart") {
-            steps { 
+            steps {
                 sh """
-            cd domyduda
-            helm dependency update
-            helm upgrade --install domyduda domyduda
-        """
+                    cd domyduda
+                    helm dependency update
+                    helm upgrade --install domyduda domyduda
+                """
             }
         }
 
@@ -65,7 +67,7 @@ pipeline {
             }
         }
 
-        stage("Build docker image") {
+        stage("Build Docker Image") {
             steps {
                 script {
                     dockerImage = docker.build("${DOCKER_IMAGE}:latest", "--no-cache .")
@@ -73,7 +75,7 @@ pipeline {
             }
         }
 
-        stage('Push Docker image') {
+        stage('Push Docker Image') {
             when {
                 branch 'main'
             }
@@ -86,7 +88,7 @@ pipeline {
             }
         }
 
-        stage('Create merge request') {
+        stage('Create Merge Request') {
             when {
                 not {
                     branch 'main'
