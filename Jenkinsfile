@@ -10,7 +10,7 @@ pipeline{
         DOCKER_IMAGE = 'razasraf7/domyduda'
         GITHUB_API_URL = 'https://api.github.com'
         GITHUB_REPO = 'RazAsraf7/FastAPI-App'
-        GITHUB_TOKEN = credentials('github-credentials')
+        GITHUB_TOKEN = credentials('github_credentials')
     }
 
     stages{
@@ -63,7 +63,7 @@ pipeline{
                 }
             }
             steps {
-                withCredentials([string(credentialsId: 'github-credentials', variable: 'GITHUB_TOKEN')]) {
+                withCredentials([string(credentialsId: 'github_credentials', variable: 'GITHUB_TOKEN')]) {
                     script {
                         def branchName = env.BRANCH_NAME
                         def pullRequestTitle = "Merge ${branchName} into main"
