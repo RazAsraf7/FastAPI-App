@@ -2,45 +2,35 @@ pipeline {
     agent {
         kubernetes {
             defaultContainer 'helm_and_kubectl'
-            yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-  name: my-pod
-spec:
-  containers:
-    - name: helm_and_kubectl
-      image: razasraf7/helm_and_kubectl
-      command:
-        - cat
-      tty: true
-      resources:
-        requests:
-          memory: '512Mi'
-          cpu: '500m'
-        limits:
-          memory: '1Gi'
-          cpu: '1'
-      env:
-        - name: KUBECONFIG
-          value: /home/jenkins/.kube/config
-    - name: jnlp
-      image: jenkins/inbound-agent:latest
-      args: '${computer.jnlpmac} ${computer.name}'
-      resources:
-        requests:
-          memory: '256Mi'
-          cpu: '100m'
-        limits:
-          memory: '512Mi'
-          cpu: '500m'
-  volumes:
-    - name: workspace-volume
-      emptyDir: {}
-  volumeMounts:
-    - name: workspace-volume
-      mountPath: /home/jenkins/agent
-"""
+            containerTemplate {
+                name 'helm_and_kubectl'
+                image 'razasraf7/helm_and_kubectl'
+                command 'cat'
+                ttyEnabled true
+                resourceRequestMemory '512Mi'
+                resourceRequestCpu '500m'
+                resourceLimitMemory '1Gi'
+                resourceLimitCpu '1'
+                envVars {
+                    envVar(key: 'KUBECONFIG', value: '/home/jenkins/.kube/config')
+                }
+            }
+            containerTemplate {
+                name 'jnlp'
+                image 'jenkins/inbound-agent:latest'
+                args '${computer.jnlpmac} ${computer.name}'
+                resourceRequestMemory '256Mi'
+                resourceRequestCpu '100m'
+                resourceLimitMemory '512Mi'
+                resourceLimitCpu '500m'
+            }
+            volumeMounts {
+                mountPath '/home/jenkins/agent'
+                name 'workspace-volume'
+            }
+            volumes {
+                emptyDirVolume(mountPath: '/home/jenkins/agent', name: 'workspace-volume')
+            }
         }
     }
 
