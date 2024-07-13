@@ -2,6 +2,35 @@ pipeline{
     agent{
         kubernetes{
             defaultContainer 'razasraf7/helm_and_kubectl'
+            podTemplate(
+    containers: [
+        containerTemplate(
+            name: 'helm_and_kubectl',
+            image: 'razasraf7/helm_and_kubectl',
+            command: 'cat',
+            ttyEnabled: true,
+            resourceRequestMemory: '512Mi',
+            resourceRequestCpu: '500m',
+            resourceLimitMemory: '1Gi',
+            resourceLimitCpu: '1',
+            envVars: [
+                [key: 'KUBECONFIG', value: '/home/jenkins/.kube/config']
+            ]
+        ),
+        containerTemplate(
+            name: 'jnlp',
+            image: 'jenkins/inbound-agent:latest',
+            args: '${computer.jnlpmac} ${computer.name}',
+            resourceRequestMemory: '256Mi',
+            resourceRequestCpu: '100m',
+            resourceLimitMemory: '512Mi',
+            resourceLimitCpu: '500m'
+        )
+    ],
+    volumes: [
+        emptyDirVolume(mountPath: '/home/jenkins/agent', name: 'workspace-volume')
+    ]
+)
         }
     }
 
