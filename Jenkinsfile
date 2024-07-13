@@ -86,8 +86,8 @@ spec:
     }
     post {
         always {
-            container('kubectl') {
-                script {
+            node {
+                container('kubectl') {
                     sh 'kubectl delete pod $(kubectl get pods --selector=job-name=$JOB_NAME --output=jsonpath={.items..metadata.name}) || true'
                 }
                 cleanWs()
