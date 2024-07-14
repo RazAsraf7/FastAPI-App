@@ -62,7 +62,7 @@ pipeline {
             steps {
                 container('docker') {
                     script {
-                        def dockerImage = docker.build("razasraf7/domyduda:latest", "--no-cache .")
+                        dockerImage = docker.build("razasraf7/domyduda:latest", "--no-cache .")
                     }
                 }
             }
@@ -75,7 +75,7 @@ pipeline {
                 container('docker') {
                     script {
                         docker.withRegistry('https://registry.hub.docker.com', 'docker_credentials') {
-                            dockerImage.push("razasraf7/domyduda:latest")
+                            dockerImage.push("latest")
                         }
                     }
                 }
