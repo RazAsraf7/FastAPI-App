@@ -56,11 +56,19 @@
         .login-form button:hover {
             background-color: #45a049;
         }
+        .error {
+            color: red;
+            text-align: center;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
         <h1>Login</h1>
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
         <form class="login-form" method="post" action="/login">
             <label for="User_Name">Username:</label>
             <input type="text" id="User_Name" name="User_Name" required>

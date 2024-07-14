@@ -1,0 +1,6 @@
+auth:
+  rootPassword: "212928139"  # Ensure the password is enclosed in quotes
+  username: "root"
+  password: "212928139"
+  usernames: ["root"]
+  databases: ["DMD"]
