@@ -75,7 +75,7 @@ pipeline {
                 container('docker') {
                     script {
                         docker.withRegistry('https://registry.hub.docker.com', 'docker_credentials') {
-                            dockerImage.push("latest")
+                            dockerImage.push("razasraf7/domyduda:latest")
                         }
                     }
                 }
