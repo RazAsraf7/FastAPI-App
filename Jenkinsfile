@@ -60,20 +60,20 @@ pipeline {
                 }
             }
         }
-         stage('Test') {
-            steps {
-                script {
-                    // Run tests
-                    sh 'pytest tests'
-                }
-            }
-        }
         stage('Build Docker Image') {
             steps {
                 container('docker') {
                     script {
                         dockerImage = docker.build("razasraf7/domyduda:latest", "--no-cache .")
                     }
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                script {
+                    // Run tests
+                    sh 'pytest tests'
                 }
             }
         }
