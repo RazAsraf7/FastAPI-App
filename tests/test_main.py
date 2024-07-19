@@ -1,9 +1,8 @@
 import pytest
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from fastapi.testclient import TestClient
 from DMD import app  # Assuming 'app' is your FastAPI instance
 from urllib.parse import quote
-
 
 client = TestClient(app)
 
@@ -12,17 +11,16 @@ def test_read_main():
     assert response.status_code == 200
     assert response.json() == {"message": "Hello World"}
 
-
 @pytest.mark.asyncio
 async def test_health_check():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get("/health")
     assert response.status_code == 200
     assert response.text == "OK"
 
 @pytest.mark.asyncio
 async def test_register_user():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post("/register", data={
             "First_Name": "Test",
             "Last_Name": "User",
@@ -49,10 +47,9 @@ async def test_register_user():
 
     assert actual_location == expected_location
 
-
 @pytest.mark.asyncio
 async def test_login_user():
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post("/login", data={
             "User_Name": "testuser",
             "Password": "TestPassword1"
