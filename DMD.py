@@ -275,6 +275,11 @@ async def logout(request: Request):
     response.delete_cookie("user_name")
     return response
 
+
+@app.get("/root")
+def read_root():
+    return {"message": "Hello World"}
+
 def get_users_by_hobby(hobby):
     pipeline = [
         {"$match": {"hobby": hobby}},

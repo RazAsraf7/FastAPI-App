@@ -6,7 +6,7 @@ replicaCount: 3
 
 image:
   repository: razasraf7/domyduda
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
 
@@ -120,3 +120,4 @@ mongodb:
   architecture: standalone
   service:
     port: 27017
+    
