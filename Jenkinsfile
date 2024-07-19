@@ -73,6 +73,7 @@ pipeline {
             steps {
                 script {
                     // Run tests
+                    sh 'pip install pytest pytest-asyncio httpx'
                     sh 'pytest tests'
                 }
             }
