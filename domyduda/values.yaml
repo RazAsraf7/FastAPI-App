@@ -120,3 +120,4 @@ mongodb:
   architecture: standalone
   service:
     port: 27017
+    
