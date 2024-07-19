@@ -32,6 +32,8 @@ pipeline {
     environment {
         GITHUB_API_URL = 'https://api.github.com'
         GITHUB_REPO = 'RazAsraf7/FastAPI-App'
+        EMAIL_RECIPIENTS = 'razasraf7@gmail.com'
+
     }
     stages {
         stage('Build Helm Chart') {
@@ -110,6 +112,24 @@ pipeline {
                     }
                 }
             }
+        }
+    }
+    post {
+        success {
+            echo 'Build succeeded.'
+        }
+        failure {
+            emailext(
+                to: "${EMAIL_RECIPIENTS}",
+                subject: "Jenkins Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: """\
+                <p>Dear User,</p>
+                <p>The Jenkins build <b>${env.JOB_NAME} #${env.BUILD_NUMBER}</b> has failed.</p>
+                <p>Check the details at: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+                <p>Best Regards,<br/>Jenkins</p>
+                """,
+                mimeType: 'text/html'
+            )
         }
     }
 }
