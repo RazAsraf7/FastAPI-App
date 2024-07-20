@@ -67,12 +67,23 @@ pipeline {
                 }
             }
         }
+        stage('Setup Python Environment') {
+            steps {
+                container('python') {
+                    script {
+                    // Assuming you have a requirements.txt for dependencies
+                    sh 'python -m venv venv'
+                    sh 'source venv/bin/activate'
+                    sh 'pip install --upgrade pip'
+                    sh 'pip install -r requirements.txt'
+                    }
+                }
+            }
+        }
         stage('Test') {
             steps {
                 container('python') {
                     script {
-                        // Install pytest and dependencies
-                        sh 'pip install fastapi pytest pytest-asyncio httpx'
                         // Run tests
                         sh 'pytest tests'
                     }
