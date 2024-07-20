@@ -22,6 +22,14 @@ pipeline {
                 volumeMounts:
                 - name: docker-socket
                   mountPath: /var/run/docker.sock
+              - name: python
+                image: python:3.9
+                command:
+                - cat
+                tty: true
+                volumeMounts:
+                - name: docker-socket
+                  mountPath: /var/run/docker.sock
               volumes:
               - name: docker-socket
                 hostPath:
@@ -71,10 +79,12 @@ pipeline {
         }
         stage('Test') {
             steps {
-                script {
+                container('helm-kubectl') {
+                    script {
                     // Run tests
                     sh 'pip install pytest pytest-asyncio httpx'
                     sh 'pytest tests'
+                    }
                 }
             }
         }
