@@ -41,7 +41,6 @@ pipeline {
         GITHUB_API_URL = 'https://api.github.com'
         GITHUB_REPO = 'RazAsraf7/FastAPI-App'
         EMAIL_RECIPIENTS = 'razasraf7@gmail.com'
-
     }
     stages {
         stage('Build Helm Chart') {
@@ -68,22 +67,23 @@ pipeline {
                 }
             }
         }
+        stage('Test') {
+            steps {
+                container('python') {
+                    script {
+                        // Install pytest and dependencies
+                        sh 'pip install pytest pytest-asyncio httpx'
+                        // Run tests
+                        sh 'pytest tests'
+                    }
+                }
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 container('docker') {
                     script {
                         dockerImage = docker.build("razasraf7/domyduda:latest", "--no-cache .")
-                    }
-                }
-            }
-        }
-        stage('Test') {
-            steps {
-                container('helm-kubectl') {
-                    script {
-                    // Run tests
-                    sh 'pip install pytest pytest-asyncio httpx'
-                    sh 'pytest tests'
                     }
                 }
             }
