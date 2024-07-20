@@ -72,7 +72,7 @@ pipeline {
                 container('python') {
                     script {
                         // Install pytest and dependencies
-                        sh 'pip install pytest pytest-asyncio httpx'
+                        sh 'pip install fastapi pytest pytest-asyncio httpx'
                         // Run tests
                         sh 'pytest tests'
                     }
