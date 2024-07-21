@@ -22,6 +22,14 @@ pipeline {
                 volumeMounts:
                 - name: docker-socket
                   mountPath: /var/run/docker.sock
+              - name: python
+                image: python:3.9
+                command:
+                - cat
+                tty: true
+                volumeMounts:
+                - name: docker-socket
+                  mountPath: /var/run/docker.sock
               volumes:
               - name: docker-socket
                 hostPath:
@@ -33,7 +41,6 @@ pipeline {
         GITHUB_API_URL = 'https://api.github.com'
         GITHUB_REPO = 'RazAsraf7/FastAPI-App'
         EMAIL_RECIPIENTS = 'razasraf7@gmail.com'
-
     }
     stages {
         stage('Build Helm Chart') {
@@ -60,11 +67,24 @@ pipeline {
                 }
             }
         }
-         stage('Test') {
+        stage('Port Forward Mongo SVC') {
             steps {
-                script {
-                    // Run tests
-                    sh 'pytest tests'
+                container('helm-kubectl') {
+                    sh '''
+                    sleep 5
+                    kubectl port-forward svc/domyduda-mongodb 27017:27017 &
+                    '''
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                container('python') {
+                    script {
+                        // Run tests
+                        sh 'pip install -r requirements.txt' 
+                        sh 'pytest test_DMD.py'
+                    }
                 }
             }
         }
