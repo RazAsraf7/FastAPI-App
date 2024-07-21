@@ -72,10 +72,8 @@ pipeline {
                 container('python') {
                     script {
                         // Run tests
-                        sh 'python -m venv .'
-                        sh '. bin/activate'
-                        sh 'pip install -r requirements.txt'
-                        sh 'pytest tests'
+                        sh 'pip install -r requirements.txt' 
+                        sh 'pytest test_DMD.py'
                     }
                 }
             }
