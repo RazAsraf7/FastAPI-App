@@ -67,6 +67,16 @@ pipeline {
                 }
             }
         }
+        stage('Port Forward Mongo SVC') {
+            steps {
+                container('helm-kubectl') {
+                    sh '''
+                    sleep 5
+                    kubectl port-forward svc/domyduda-mongodb 27017:27017 &
+                    '''
+                }
+            }
+        }
         stage('Test') {
             steps {
                 container('python') {
