@@ -82,7 +82,7 @@ pipeline {
                 container('python') {
                     script {
                         // Remove test user
-                        sh 'pip install pymongo dotenv'
+                        sh 'pip install pymongo python-dotenv'
                         sh 'python delete_test_user.py'
                     }
                 }
