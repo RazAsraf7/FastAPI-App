@@ -136,6 +136,14 @@ for city in cities:
 # Output the result
 print(f"Inserted {len(cities)} documents if not already present")
 
+try:
+# Delete the user
+    result = users_collection.delete_one({"User_Name": "testuser"})
+    print(f"Deleted {result.deleted_count} document(s)")
+
+except Exception as e:
+    print(f"Error deleting user: {e}")
+
 
 app = FastAPI()
 

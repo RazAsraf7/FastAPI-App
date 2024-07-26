@@ -77,17 +77,6 @@ pipeline {
                 }
             }
         }
-        stage('Remove Test User') {
-            steps {
-                container('python') {
-                    script {
-                        // Remove test user
-                        sh 'pip install pymongo python-dotenv'
-                        sh 'python delete_test_user.py'
-                    }
-                }
-            }
-        }
         stage('Test') {
             steps {
                 container('python') {
