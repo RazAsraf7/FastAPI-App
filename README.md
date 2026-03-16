@@ -1,14 +1,78 @@
-<head>
-<h1>Hello, and welcome to Doo My Duda application project!</h1>
-</head>
-<hr>
-<body>
-<h2>A few instructions:</h2>
-<h4>If you want to register one user, you can do it inside the site.</h4>
-<h4>If you want to register multiple users, you'll have to insert them all in the new_users.json file. (as the provided example.)</h4>
+# FastAPI Application Example
 
-<h5>I am happy to hear about any recommendation/criticism/report you want to say</h5>
-<h5>My email in that case is razasraf7@gmail.com</h5>
+## Overview
 
-<h3>Hope you enjoy!</h3>
-</body>
+This project demonstrates how to build a lightweight REST API using FastAPI.
+
+It serves as a learning project focused on building modern Python APIs with automatic documentation and fast performance.
+
+---
+
+## Tech Stack
+
+* Python
+* FastAPI
+* Uvicorn
+
+---
+
+## Features
+
+* REST API endpoints
+* Automatic API documentation
+* High-performance async framework
+
+---
+
+## Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/RazAsraf7/FastAPI-App
+cd FastAPI-App
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Run the server:
+
+```bash
+uvicorn main:app --reload
+```
+
+---
+
+## API Documentation
+
+Once the server is running, open:
+
+```
+http://localhost:8000/docs
+```
+
+FastAPI automatically generates interactive API documentation using Swagger UI.
+
+---
+
+## Example Endpoint
+
+```
+GET /
+```
+
+Response:
+
+```
+{"message": "Hello World"}
+```
+
+---
+
+## Purpose
+
+The purpose of this project is to explore FastAPI and understand the fundamentals of building Python-based web APIs.
